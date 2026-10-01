@@ -1,0 +1,1867 @@
+Here is the updated version.
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEGIS BIO // Astronaut Health Monitor</title>
+  <style>
+    /* ==========================================================================
+       AEROSPACE COCKPIT DESIGN SYSTEM (100% OFFLINE, ZERO EXTERNAL DEPENDENCIES)
+       ========================================================================== */
+    :root {
+      --bg-abyss: #02050b;
+      --bg-stage: rgba(6, 12, 22, 0.85);
+      --bg-panel: rgba(9, 18, 32, 0.95);
+      --bg-card-subtle: rgba(14, 26, 44, 0.65);
+      --border-subtle: rgba(40, 72, 115, 0.38);
+      --border-bright: #265082;
+      --border-focus: #00f0ff;
+      --cyan-neon: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.28);
+      --amber-warn: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.32);
+      --red-alert: #ef4444;
+      --red-glow: rgba(239, 68, 68, 0.38);
+      --green-ok: #10b981;
+      --text-white: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #4d627c;
+      --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+      --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-abyss);
+      color: var(--text-white);
+      font-family: var(--font-ui);
+      overflow: hidden; /* Disabled native scrolling for custom engine */
+      touch-action: none;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 50% 10%, rgba(0, 240, 255, 0.05), transparent 60%),
+        linear-gradient(to right, rgba(28, 48, 80, 0.14) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(28, 48, 80, 0.14) 1px, transparent 1px);
+      background-size: 100% 100%, 44px 44px, 44px 44px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Fixed Navigation Header */
+    header.mission-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      z-index: 100;
+      background: rgba(2, 6, 14, 0.96);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.75rem;
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .brand-title {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: #fff;
+    }
+    .brand-title span {
+      color: var(--cyan-neon);
+      text-shadow: 0 0 12px var(--cyan-glow);
+    }
+
+    .page-nav-bar {
+      display: flex;
+      gap: 0.35rem;
+      background: rgba(8, 16, 28, 0.9);
+      padding: 0.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      overflow-x: auto;
+      max-width: 55vw;
+    }
+    .nav-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.35rem 0.7rem;
+      border-radius: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .nav-tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
+    .nav-tab-btn.active {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--cyan-neon);
+      border: 1px solid var(--border-focus);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .status-badge {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      text-transform: uppercase;
+    }
+    .status-badge.ok { background: rgba(16, 185, 129, 0.12); color: var(--green-ok); border: 1px solid rgba(16, 185, 129, 0.4); }
+    .status-badge.warn { background: rgba(245, 158, 11, 0.12); color: var(--amber-warn); border: 1px solid rgba(245, 158, 11, 0.5); }
+    .status-badge.alert { background: rgba(239, 68, 68, 0.15); color: var(--red-alert); border: 1px solid rgba(239, 68, 68, 0.5); }
+
+    /* Top Warning Banner */
+    .global-alert-banner {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      right: 0;
+      height: 38px;
+      z-index: 95;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    }
+    .global-alert-banner.nominal {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 12, 22, 0.95) 100%);
+      border-bottom: 1px solid rgba(16, 185, 129, 0.35);
+      color: var(--green-ok);
+    }
+    .global-alert-banner.advisory {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.22) 0%, rgba(20, 14, 5, 0.98) 100%);
+      border-bottom: 2px solid var(--amber-warn);
+      color: #fef3c7;
+      animation: alertPulseAmber 2.2s infinite ease-in-out;
+    }
+    .global-alert-banner.hazard {
+      background: linear-gradient(90deg, rgba(239, 68, 68, 0.3) 0%, rgba(26, 6, 8, 0.98) 100%);
+      border-bottom: 2px solid var(--red-alert);
+      color: #fee2e2;
+      animation: alertPulseRed 1.4s infinite ease-in-out;
+    }
+
+    @keyframes alertPulseAmber { 0%, 100% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.25); } 50% { box-shadow: 0 0 24px rgba(245, 158, 11, 0.55); } }
+    @keyframes alertPulseRed { 0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.35); } 50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.75); } }
+
+    /* Custom JS Scroll Viewport */
+    .snap-viewport {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+      perspective: 1000px;
+    }
+    
+    .snap-page-container {
+      width: 100%;
+      height: 100vh;
+      min-height: 100vh;
+      padding: 6.2rem 1.8rem 1rem 1.8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      box-sizing: border-box;
+      transform-origin: center center;
+      transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.45s ease;
+    }
+
+    /* Cinematic Page Zoom transition */
+    .shifting .snap-page-container {
+      transform: scale(0.96) translateY(0);
+      opacity: 0.5;
+    }
+
+    /* Sub-scrollbars for internal elements */
+    .sub-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+    .sub-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 3px; }
+    .sub-scroll::-webkit-scrollbar-thumb { background: var(--cyan-neon); border-radius: 3px; }
+
+    /* Page Viewport Frames */
+    .page-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--bg-stage);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 0.95rem 1.35rem 0.85rem 1.35rem;
+      position: relative;
+      box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.55), 0 14px 40px rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(12px);
+      min-height: 0;
+      overflow: hidden;
+    }
+    .page-stage::before, .page-stage::after { content: ""; position: absolute; width: 12px; height: 12px; pointer-events: none; }
+    .page-stage::before { top: -1px; left: -1px; border-top: 2px solid var(--cyan-neon); border-left: 2px solid var(--cyan-neon); }
+    .page-stage::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--cyan-neon); border-right: 2px solid var(--cyan-neon); }
+
+    .page-start-strip {
+      display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.5rem;
+      margin-bottom: 0.65rem; border-bottom: 1px solid var(--border-subtle); font-family: var(--font-mono);
+      font-size: 0.72rem; flex-shrink: 0;
+    }
+    .page-start-label { color: var(--cyan-neon); letter-spacing: 0.1em; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+    .page-start-pill { background: rgba(0, 240, 255, 0.12); border: 1px solid var(--cyan-neon); color: var(--cyan-neon); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; }
+
+    .page-end-strip {
+      display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem;
+      margin-top: 0.65rem; border-top: 1px solid var(--border-subtle); font-family: var(--font-mono);
+      font-size: 0.72rem; color: var(--text-dim); flex-shrink: 0;
+    }
+    .continue-btn {
+      background: rgba(9, 18, 32, 0.85); border: 1px solid var(--border-subtle); color: var(--cyan-neon);
+      font-family: var(--font-mono); font-size: 0.72rem; padding: 0.35rem 0.85rem; border-radius: 6px;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s ease;
+    }
+    .continue-btn:hover { background: rgba(0, 240, 255, 0.15); border-color: var(--cyan-neon); color: #fff; transform: translateY(2px); }
+
+    /* Staggered Animations */
+    .hud-box, .metric-card, .checkin-category, .streak-badge-card, .cockpit-alert-hero, .ai-agent-box {
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .hud-box:hover, .metric-card:hover, .checkin-category:hover { border-color: var(--cyan-neon); box-shadow: 0 4px 20px rgba(0, 240, 255, 0.15); }
+    .snap-page-container.page-animating .hud-box, .snap-page-container.page-animating .cockpit-alert-hero,
+    .snap-page-container.page-animating .ai-agent-box, .snap-page-container.page-animating .metric-card,
+    .snap-page-container.page-animating .checkin-category { opacity: 0; transform: translateY(14px) scale(0.985); }
+
+    /* Typewriter Cursor */
+    .typing-cursor::after { content: "▌"; color: var(--cyan-neon); animation: cursorBlink 0.75s infinite steps(2, start); margin-left: 2px; }
+    @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    .hud-box { background: var(--bg-panel); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.1rem; backdrop-filter: blur(12px); }
+    .chip-btn { background: rgba(9, 18, 32, 0.85); border: 1px solid var(--border-subtle); color: var(--text-muted); font-family: var(--font-mono); font-size: 0.68rem; padding: 0.25rem 0.6rem; border-radius: 4px; cursor: pointer; transition: all 0.2s ease; }
+    .chip-btn:hover { border-color: var(--cyan-neon); color: #fff; }
+
+    /* Page 01: Cockpit */
+    .cockpit-grid { display: grid; grid-template-columns: 1.4fr 1.1fr; gap: 1.25rem; flex: 1; min-height: 0; }
+    .graph-tab-bar { display: flex; gap: 0.4rem; background: rgba(6, 12, 22, 0.85); padding: 0.25rem; border-radius: 6px; border: 1px solid var(--border-subtle); width: fit-content; margin-bottom: 0.55rem; }
+    .graph-tab { background: transparent; border: 1px solid transparent; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; padding: 0.35rem 0.7rem; border-radius: 4px; cursor: pointer; transition: all 0.2s ease; }
+    .graph-tab:hover { color: #fff; }
+    .graph-tab.active { background: rgba(0, 240, 255, 0.12); border: 1px solid var(--cyan-neon); color: var(--cyan-neon); }
+    .chart-container-hud { width: 100%; height: 270px; position: relative; margin: 0.5rem 0; }
+    canvas#cockpitChartCanvas { width: 100%; height: 100%; display: block; cursor: crosshair; }
+
+    .cockpit-alert-hero { border-radius: 8px; padding: 0.85rem 1rem; display: flex; gap: 0.85rem; align-items: center; transition: all 0.3s ease; }
+    .cockpit-alert-hero.hazard { border: 2px solid var(--red-alert); background: linear-gradient(135deg, rgba(239, 68, 68, 0.22) 0%, rgba(10, 18, 32, 0.98) 100%); box-shadow: 0 0 18px rgba(239, 68, 68, 0.35); }
+    .cockpit-alert-hero.advisory { border: 2px solid var(--amber-warn); background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(10, 18, 32, 0.98) 100%); box-shadow: 0 0 18px rgba(245, 158, 11, 0.28); }
+    .cockpit-alert-hero.nominal { border: 1px solid var(--border-subtle); background: rgba(9, 18, 32, 0.9); }
+    .hazard-triangle-svg { width: 44px; height: 44px; flex-shrink: 0; stroke-width: 2.2; fill: none; }
+
+    .ai-agent-box { background: linear-gradient(145deg, rgba(16, 26, 45, 0.95) 0%, rgba(9, 14, 26, 0.98) 100%); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.9rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 0; flex: 1; margin-top: 0.65rem; }
+    .ai-neural-meter { display: flex; flex-direction: column; gap: 0.28rem; font-family: var(--font-mono); font-size: 0.68rem; }
+    .ai-meter-row { display: flex; justify-content: space-between; align-items: center; }
+    .ai-bar-track { width: 100px; height: 5px; background: rgba(255, 255, 255, 0.08); border-radius: 3px; overflow: hidden; }
+    .ai-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+    .ai-advice-display { background: rgba(4, 8, 16, 0.85); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.65rem 0.8rem; margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-white); line-height: 1.45; max-height: 125px; overflow-y: auto; }
+
+    /* Page 02: Calendar */
+    .calendar-controls-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0.45rem; max-height: 380px; overflow-y: auto; padding-right: 0.4rem; }
+    .day-btn { background: rgba(9, 18, 32, 0.85); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.45rem 0.25rem; text-align: center; font-family: var(--font-mono); cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: all 0.15s ease; }
+    .day-btn:hover { background: rgba(20, 36, 62, 0.95); border-color: var(--cyan-neon); color: #fff; }
+    .day-btn.active { background: rgba(0, 240, 255, 0.16); border-color: var(--cyan-neon); box-shadow: 0 0 10px var(--cyan-glow); }
+    .dot-status { width: 6px; height: 6px; border-radius: 50%; margin-top: 4px; }
+    .dot-nominal { background: var(--green-ok); } .dot-advisory { background: var(--amber-warn); box-shadow: 0 0 6px var(--amber-warn); } .dot-critical { background: var(--red-alert); box-shadow: 0 0 8px var(--red-alert); } .dot-empty { border: 1px dashed var(--text-dim); background: transparent; }
+
+    /* Page 03: Vitals Matrix */
+    .metrics-matrix { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 0.85rem; }
+    .metric-card { background: rgba(9, 18, 32, 0.85); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.1rem; font-family: var(--font-mono); }
+
+    /* Page 04: Check-in Form */
+    .daily-system-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 1.25rem; flex: 1; min-height: 0; height: 100%; }
+    .form-panel-card { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+    .form-scroll-pane { flex: 1; min-height: 0; overflow-y: auto; padding-right: 0.55rem; display: flex; flex-direction: column; gap: 0.6rem; }
+    .checkin-category { background: rgba(6, 12, 22, 0.85); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem 0.85rem; }
+    .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.3rem; }
+    .category-title { font-family: var(--font-mono); font-size: 0.74rem; font-weight: 700; color: var(--cyan-neon); text-transform: uppercase; letter-spacing: 0.06em; }
+    .form-fields-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.65rem; }
+    .field-wrap { display: flex; flex-direction: column; gap: 0.25rem; }
+    .field-label { font-size: 0.68rem; color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase; }
+    .field-input { width: 100%; background: var(--bg-abyss); border: 1px solid var(--border-subtle); color: #fff; padding: 0.4rem 0.55rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.8rem; outline: none; transition: border-color 0.2s ease; }
+    .field-input:focus { border-color: var(--cyan-neon); box-shadow: 0 0 8px var(--cyan-glow); }
+    .fixed-submit-bar { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.65rem; margin-top: 0.5rem; flex-shrink: 0; }
+
+    /* Page 05: Logbook */
+    .logbook-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.72rem; margin-top: 0.25rem; }
+    .logbook-table th { text-align: left; padding: 0.4rem 0.5rem; color: var(--text-muted); border-bottom: 1px solid var(--border-subtle); font-weight: 600; position: sticky; top: 0; background: var(--bg-panel); z-index: 2; }
+    .logbook-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid rgba(40, 72, 115, 0.2); }
+    .logbook-table tr:hover td { background: rgba(0, 240, 255, 0.05); }
+    .streak-badge-card { background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(9, 18, 32, 0.95) 100%); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+
+    /* Page 06: 3D Body */
+    .scanner-layout { display: grid; grid-template-columns: 1.45fr 1fr; gap: 1.5rem; flex: 1; min-height: 0; align-items: center; }
+    .canvas-3d-box { width: 100%; height: 440px; background: radial-gradient(circle at center, rgba(14, 26, 44, 0.8) 0%, rgba(2, 5, 11, 0.98) 75%); border: 1px solid var(--border-subtle); border-radius: 12px; position: relative; overflow: hidden; }
+    canvas#canvas3D { width: 100%; height: 100%; display: block; cursor: grab; }
+    canvas#canvas3D:active { cursor: grabbing; }
+
+    /* Modals */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px); z-index: 200; display: none; align-items: center; justify-content: center; padding: 1.5rem; }
+    .modal-backdrop.active { display: flex; }
+    .modal-window { background: #060e1a; border: 1px solid var(--cyan-neon); border-radius: 12px; width: 100%; max-width: 660px; padding: 1.75rem; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9); }
+    textarea.json-input-box { width: 100%; height: 180px; background: var(--bg-abyss); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.85rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--cyan-neon); outline: none; margin: 0.75rem 0; }
+    
+    .uninit-shield { position: absolute; inset: 0; background: rgba(2, 5, 11, 0.96); backdrop-filter: blur(14px); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem; }
+
+    @media (max-height: 760px) {
+      .snap-page-container { padding: 5.4rem 1.2rem 0.8rem 1.2rem; }
+      .page-stage { padding: 0.8rem 1.1rem 0.65rem 1.1rem; }
+      .metrics-matrix { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="mission-header">
+    <div class="brand-cluster">
+      <div class="brand-title">AEGIS <span>BIO</span></div>
+      <div id="cache-pill" class="status-badge warn">READY</div>
+    </div>
+
+    <nav class="page-nav-bar sub-scroll">
+      <button class="nav-tab-btn active" onclick="jumpToPage(0)" id="step-0">01 OVERVIEW</button>
+      <button class="nav-tab-btn" onclick="jumpToPage(1)" id="step-1">02 CALENDAR</button>
+      <button class="nav-tab-btn" onclick="jumpToPage(2)" id="step-2">03 VITALS</button>
+      <button class="nav-tab-btn" onclick="jumpToPage(3)" id="step-3">04 CHECK-IN</button>
+      <button class="nav-tab-btn" onclick="jumpToPage(4)" id="step-4">05 LOGBOOK</button>
+      <button class="nav-tab-btn" onclick="jumpToPage(5)" id="step-5">06 3D BODY</button>
+      <button class="nav-tab-btn" onclick="jumpToPage(6)" id="step-6">07 PROTOCOLS</button>
+    </nav>
+
+    <div style="display: flex; align-items: center; gap: 1rem; font-family: var(--font-mono); font-size: 0.75rem;">
+      <button onclick="quickOpenDailyLog()" style="background: rgba(0, 240, 255, 0.15); border: 1px solid var(--cyan-neon); color: var(--cyan-neon); padding: 0.35rem 0.75rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer; font-weight: 700;">
+        + LOG DAY <span id="quick-log-day-num">250</span>
+      </button>
+      <span style="color: var(--text-dim);">|</span>
+      <span style="color: var(--text-muted);">COMM DELAY: <strong style="color: var(--amber-warn);">14m</strong></span>
+      <button onclick="purgeStorageCache()" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-muted); padding: 0.3rem 0.6rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.68rem; cursor: pointer;">
+        ✕ RESET
+      </button>
+    </div>
+  </header>
+
+  <!-- TOP ALERT STRIP -->
+  <div id="globalAlertBanner" class="global-alert-banner nominal">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span id="banner-icon">🟢</span>
+      <span id="banner-text">HEALTH STATUS: NOMINAL</span>
+    </div>
+    <button onclick="jumpToPage(0)" id="banner-btn" class="chip-btn" style="padding: 0.2rem 0.6rem; font-size: 0.68rem; border-color: currentColor; color: inherit;">
+      VIEW ➔
+    </button>
+  </div>
+
+  <main class="snap-viewport" id="snapContainer">
+
+    <!-- PAGE 01: OVERVIEW & HEALTH AI -->
+    <section class="snap-page-container" id="page-cockpit">
+      <div class="page-stage">
+        
+        <div class="page-start-strip">
+          <div class="page-start-label">
+            <span class="page-start-pill">PAGE 01 / 07</span>
+            <span data-typewriter="OVERVIEW // VITALS & AI ASSISTANT">OVERVIEW // VITALS & AI ASSISTANT</span>
+          </div>
+          <div style="display: flex; gap: 1rem; align-items: center; font-family: var(--font-mono);">
+            <span id="chart-window-tag" class="page-start-pill">LAST 10 DAYS</span>
+            <span style="color: var(--text-dim);">DAY <strong id="header-day-label" style="color: var(--cyan-neon);">249</strong></span>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <div class="graph-tab-bar sub-scroll">
+              <button class="graph-tab active" onclick="switchDomain('cardio')" id="tab-cardio">Blood & Fluid</button>
+              <button class="graph-tab" onclick="switchDomain('sans')" id="tab-sans">Eye Pressure</button>
+              <button class="graph-tab" onclick="switchDomain('radiation')" id="tab-radiation">Radiation</button>
+              <button class="graph-tab" onclick="switchDomain('bone')" id="tab-bone">Bone Loss</button>
+              <button class="graph-tab" onclick="switchDomain('immune')" id="tab-immune">Immune</button>
+            </div>
+          </div>
+
+          <div class="cockpit-grid">
+            
+            <div class="hud-box" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4rem; display: flex; justify-content: space-between; align-items: flex-start;">
+                  <div>
+                    <h3 id="graph-main-title" style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: #fff;">
+                      Fluid Shift: Head & Neck Veins
+                    </h3>
+                    <p id="graph-sub-title" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">
+                      Neck vein size vs heart volume change. Fluid shifts upward in zero-G.
+                    </p>
+                  </div>
+                </div>
+                <div class="chart-container-hud">
+                  <canvas id="cockpitChartCanvas"></canvas>
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.5rem; font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">
+                <div style="display: flex; gap: 1.25rem;">
+                  <span style="display: flex; align-items: center; gap: 0.35rem;"><span style="width: 10px; height: 3px; background: var(--cyan-neon); display: inline-block;"></span> <span id="leg-1">Primary</span></span>
+                  <span style="display: flex; align-items: center; gap: 0.35rem;"><span style="width: 10px; height: 3px; background: var(--amber-warn); display: inline-block;"></span> <span id="leg-2">Secondary</span></span>
+                  <span style="display: flex; align-items: center; gap: 0.35rem; color: var(--red-alert);"><span style="width: 10px; height: 1px; border-top: 1px dashed var(--red-alert); display: inline-block;"></span> <span>Threshold</span></span>
+                </div>
+                <span id="chart-hover-tip" style="color: var(--cyan-neon);">Hover over points for details</span>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; min-height: 0;">
+              
+              <div id="cockpitAlertHero" class="cockpit-alert-hero nominal">
+                <svg class="hazard-triangle-svg" viewBox="0 0 24 24">
+                  <path id="hazard-triangle-path" stroke="var(--green-ok)" d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line id="hazard-line-1" stroke="var(--green-ok)" x1="12" y1="9" x2="12" y2="13"></line>
+                  <line id="hazard-line-2" stroke="var(--green-ok)" x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <div style="flex: 1;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span id="cockpit-alert-badge" class="status-badge ok">NORMAL</span>
+                    <span id="cockpit-alert-action-tag" style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim);">SCHEDULE ON TRACK</span>
+                  </div>
+                  <h4 id="cockpit-alert-title" style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-top: 0.2rem;">All Vitals Normal</h4>
+                  <p id="cockpit-alert-desc" style="font-size: 0.74rem; color: var(--text-muted); margin-top: 0.15rem; line-height: 1.35;">
+                    Health telemetry is tracking expected flight curves.
+                  </p>
+                </div>
+              </div>
+
+              <!-- AI Assistant Terminal -->
+              <div class="ai-agent-box">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4rem;">
+                    <strong style="font-family: var(--font-mono); font-size: 0.78rem; color: #fff;">HEALTH AI ASSISTANT</strong>
+                    <span id="ai-status-tag" style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--green-ok);">ACTIVE</span>
+                  </div>
+
+                  <div class="ai-neural-meter" style="margin-top: 0.5rem;">
+                    <div class="ai-meter-row">
+                      <span style="color: var(--text-muted);">Eye Pressure:</span>
+                      <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <div class="ai-bar-track"><div id="meter-sans" class="ai-bar-fill" style="width: 0%; background: var(--amber-warn);"></div></div>
+                        <span id="val-sans" style="color: var(--amber-warn); width: 34px; text-align: right;">--%</span>
+                      </div>
+                    </div>
+                    <div class="ai-meter-row">
+                      <span style="color: var(--text-muted);">Neck Vein Pooling:</span>
+                      <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <div class="ai-bar-track"><div id="meter-cardio" class="ai-bar-fill" style="width: 0%; background: var(--cyan-neon);"></div></div>
+                        <span id="val-cardio" style="color: var(--cyan-neon); width: 34px; text-align: right;">--%</span>
+                      </div>
+                    </div>
+                    <div class="ai-meter-row">
+                      <span style="color: var(--text-muted);">Radiation Dose:</span>
+                      <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <div class="ai-bar-track"><div id="meter-rad" class="ai-bar-fill" style="width: 0%; background: var(--red-alert);"></div></div>
+                        <span id="val-rad" style="color: var(--red-alert); width: 34px; text-align: right;">--%</span>
+                      </div>
+                    </div>
+                    <div class="ai-meter-row">
+                      <span style="color: var(--text-muted);">Bone Loss Rate:</span>
+                      <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <div class="ai-bar-track"><div id="meter-bone" class="ai-bar-fill" style="width: 0%; background: var(--amber-warn);"></div></div>
+                        <span id="val-bone" style="color: var(--amber-warn); width: 34px; text-align: right;">--%</span>
+                      </div>
+                    </div>
+                    <div class="ai-meter-row">
+                      <span style="color: var(--text-muted);">Alert Level:</span>
+                      <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <div class="ai-bar-track"><div id="meter-urgent" class="ai-bar-fill" style="width: 0%; background: var(--amber-warn);"></div></div>
+                        <span id="val-urgent" style="color: var(--amber-warn); width: 34px; text-align: right;">--%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="ai-advice-display sub-scroll" id="ai-agent-narrative">
+                    Awaiting telemetry. Load simulation or log today's check-in to run diagnosis.
+                  </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-subtle); padding-top: 0.4rem; margin-top: 0.4rem;">
+                  <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                    <button onclick="askAiQuestion('sans')" class="chip-btn" style="font-size: 0.64rem; padding: 0.2rem 0.45rem;">Eye Check</button>
+                    <button onclick="askAiQuestion('workout')" class="chip-btn" style="font-size: 0.64rem; padding: 0.2rem 0.45rem;">Workout Plan</button>
+                    <button onclick="askAiQuestion('radiation')" class="chip-btn" style="font-size: 0.64rem; padding: 0.2rem 0.45rem;">Radiation Info</button>
+                    <button onclick="askAiQuestion('trend')" class="chip-btn" style="font-size: 0.64rem; padding: 0.2rem 0.45rem;">100-Day Trend</button>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <div class="page-end-strip">
+          <span>[ END OF PAGE 01 ]</span>
+          <button class="continue-btn" onclick="jumpToPage(1)">
+            CONTINUE TO CALENDAR (PAGE 02) ↓
+          </button>
+        </div>
+
+      </div>
+
+      <div id="clean-state-shield" class="uninit-shield" style="display: none;">
+        <svg style="width: 52px; height: 52px; stroke: var(--cyan-neon); fill: none; margin-bottom: 1.25rem;" stroke-width="1.6" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <h2 style="font-family: var(--font-mono); font-size: 1.35rem; font-weight: 700; color: #fff; letter-spacing: 0.08em;">
+          NO TELEMETRY LOADED
+        </h2>
+        <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 520px; margin: 0.6rem 0 1.75rem 0; line-height: 1.6;">
+          System is clean. Load the 100-day flight simulation (Days 150 to 249) or log daily telemetry:
+        </p>
+        <div style="display: flex; gap: 1rem;">
+          <button class="graph-tab active" onclick="load100DayResearchSimulation()" style="padding: 0.65rem 1.6rem; font-size: 0.85rem; border-color: var(--green-ok); color: var(--green-ok); font-weight: 700;">
+            Load 100-Day Simulation
+          </button>
+          <button class="graph-tab" onclick="jumpToPage(3)" style="padding: 0.65rem 1.6rem; font-size: 0.85rem;">
+            Open Daily Form
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 02: CALENDAR -->
+    <section class="snap-page-container" id="page-calendar">
+      <div class="page-stage">
+        
+        <div class="page-start-strip">
+          <div class="page-start-label">
+            <span class="page-start-pill">PAGE 02 / 07</span>
+            <span data-typewriter="CALENDAR // TIMELINE">CALENDAR // TIMELINE</span>
+          </div>
+          <div style="color: var(--text-dim);">INSPECTING: <strong id="cal-inspect-day-label" style="color: var(--cyan-neon);">DAY 249</strong></div>
+        </div>
+
+        <div class="hud-box" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+          <div style="display: flex; flex-direction: column; min-height: 0; flex: 1;">
+            <div class="calendar-controls-row" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.6rem; flex-shrink: 0;">
+              <div>
+                <h4 style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: #fff;">Mission Calendar</h4>
+                <p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.2rem;" id="calendar-summary-stat">100 Days Logged</p>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button onclick="setCalendarView('recent')" class="chip-btn" id="btn-cal-recent" style="border-color: var(--cyan-neon); color: var(--cyan-neon);">Recent 28 Days</button>
+                <button onclick="setCalendarView('all')" class="chip-btn" id="btn-cal-all">All 100 Days</button>
+              </div>
+            </div>
+            
+            <div class="calendar-grid sub-scroll" id="calendar-grid-box" style="margin-top: 0.85rem; flex: 1;"></div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem; font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0;">
+            <span style="display: flex; align-items: center; gap: 0.35rem;"><span class="dot-status dot-nominal"></span> Normal</span>
+            <span style="display: flex; align-items: center; gap: 0.35rem;"><span class="dot-status dot-advisory"></span> Warning</span>
+            <span style="display: flex; align-items: center; gap: 0.35rem;"><span class="dot-status dot-critical"></span> Alert</span>
+            <span style="display: flex; align-items: center; gap: 0.35rem;"><span class="dot-status dot-empty"></span> Pending</span>
+          </div>
+        </div>
+
+        <div class="page-end-strip">
+          <span>[ END OF PAGE 02 ]</span>
+          <button class="continue-btn" onclick="jumpToPage(2)">
+            CONTINUE TO VITALS (PAGE 03) ↓
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PAGE 03: VITALS -->
+    <section class="snap-page-container" id="page-vitals">
+      <div class="page-stage">
+        
+        <div class="page-start-strip">
+          <div class="page-start-label">
+            <span class="page-start-pill">PAGE 03 / 07</span>
+            <span data-typewriter="VITALS // VS EARTH NORMAL">VITALS // VS EARTH NORMAL</span>
+          </div>
+          <div style="color: var(--text-dim);">DAY <strong id="vitals-day-label" style="color: var(--cyan-neon);">249</strong></div>
+        </div>
+
+        <div class="hud-box" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+          <div style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
+            <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; flex-shrink: 0;">
+              <h4 style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: #fff;">
+                Vitals vs Earth Baseline (1G) (<span id="matrix-day-label">249</span>)
+              </h4>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
+                How microgravity and radiation compare to Earth normal:
+              </p>
+            </div>
+
+            <div class="metrics-matrix sub-scroll" id="metrics-matrix-box" style="overflow-y: auto; flex: 1; padding-right: 0.5rem; padding-bottom: 0.5rem;"></div>
+          </div>
+
+          <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim); border-top: 1px solid var(--border-subtle); padding-top: 0.5rem; flex-shrink: 0;">
+            Baseline: NASA Human Research Program Standard.
+          </div>
+        </div>
+
+        <div class="page-end-strip">
+          <span>[ END OF PAGE 03 ]</span>
+          <button class="continue-btn" onclick="jumpToPage(3)">
+            CONTINUE TO CHECK-IN (PAGE 04) ↓
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PAGE 04: DAILY CHECK-IN -->
+    <section class="snap-page-container" id="page-checkin">
+      <div class="page-stage">
+        
+        <div class="page-start-strip">
+          <div class="page-start-label">
+            <span class="page-start-pill">PAGE 04 / 07</span>
+            <span data-typewriter="DAILY CHECK-IN // SELF-LOG">DAILY CHECK-IN // SELF-LOG</span>
+          </div>
+          <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <button onclick="autoFillHealthyNominal()" class="chip-btn" style="border-color: var(--green-ok); color: var(--green-ok); padding: 0.25rem 0.65rem;">
+              Fill Healthy Draft
+            </button>
+            <button onclick="copyYesterdayValues()" class="chip-btn" style="padding: 0.25rem 0.65rem;">
+              Copy Yesterday
+            </button>
+          </div>
+        </div>
+
+        <div class="hud-box form-panel-card" style="flex: 1;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; margin-bottom: 0.6rem; flex-shrink: 0;">
+            <div>
+              <h3 style="font-size: 1rem; font-weight: 700; color: #fff;">Daily Astronaut Check-in</h3>
+              <p style="font-size: 0.75rem; color: var(--text-muted);">Enter today's readings, symptoms, and workout.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim);">DAY:</span>
+              <input type="number" id="daily-log-day-input" value="250" style="width: 75px; background: var(--bg-abyss); border: 1px solid var(--cyan-neon); color: #fff; padding: 0.25rem 0.45rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; text-align: center;" />
+            </div>
+          </div>
+
+          <form id="dailyCheckinForm" onsubmit="submitComprehensiveDailyLog(event)" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+            
+            <div class="form-scroll-pane sub-scroll">
+              <div class="checkin-category">
+                <div class="category-header">
+                  <span class="category-title">1. Heart & Blood Flow</span>
+                </div>
+                <div class="form-fields-row">
+                  <div class="field-wrap">
+                    <label class="field-label">Resting HR (BPM)</label>
+                    <input type="number" id="f_hr" required value="60" class="field-input" />
+                  </div>
+                  <div class="field-wrap">
+                    <label class="field-label">Blood Pressure</label>
+                    <input type="text" id="f_bp" required value="120/78" class="field-input" placeholder="120/80" />
+                  </div>
+                  <div class="field-wrap">
+                    <label class="field-label">Neck Vein Size (mm²)</label>
+                    <input type="number" step="0.1" id="f_ijv" required value="71.5" class="field-input" />
+                  </div>
+                  <div class="field-wrap">
+                    <label class="field-label">Heart HRV (ms)</label>
+                    <input type="number" step="0.1" id="f_hrv" required value="62.0" class="field-input" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="checkin-category">
+                <div class="category-header">
+                  <span class="category-title">2. Eyes & Head Pressure</span>
+                </div>
+                <div class="form-fields-row">
+                  <div class="field-wrap">
+                    <label class="field-label">Eye Sheath (mm)</label>
+                    <input type="number" step="0.05" id="f_onsd" required value="5.95" class="field-input" />
+                  </div>
+                  <div class="field-wrap">
+                    <label class="field-label">Head Fullness (1-10)</label>
+                    <input type="range" min="1" max="10" value="4" id="f_head_slider" oninput="setText('head-val', this.value)" style="accent-color: var(--cyan-neon); margin-top: 0.35rem;" />
+                    <span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--cyan-neon); text-align: right;">Score: <strong id="head-val">4</strong> / 10</span>
+                  </div>
+                  <div class="field-wrap">
+                    <label class="field-label">Vision Quality</label>
+                    <select id="f_vision" class="field-input">
+                      <option value="clear">Clear (Normal)</option>
+                      <option value="mild_blur">Mild Blur</option>
+                      <option value="severe_blur">Very Blurry</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="checkin-category">
+                <div class="category-header">
+                  <span class="category-title">3. Radiation & Bones</span>
+                </div>
+                <div class="form-fields-row">
+                  <div class="field-wrap">
+                    <label class="field-label">Daily Radiation (mSv)</label>
+                    <input type="number" step="0.05" id="f_rad" required value="1.75" class="field-input" />
+                  </div>
+                  <div class="field-wrap">
+                    <label class="field-label">Bone Loss Marker (NTX)</label>
+                    <input type="number" step="0.5" id="f_ntx" required value="67.0" class="field-input" />
+                  </div>
+                  <div class="field-wrap">
+                    <label class="field-label">Stress Marker (EBV)</label>
+                    <input type="number" id="f_ebv" required value="320" class="field-input" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="checkin-category">
+                <div class="category-header">
+                  <span class="category-title">4. Workout</span>
+                </div>
+                <div class="form-fields-row">
+                  <div class="field-wrap">
+                    <label class="field-label">ARED Force (kN)</label>
+                    <input type="number" step="0.1" id="f_ared" required value="2.8" class="field-input" />
+                  </div>
+                  <div class="field-wrap">
+                    <label class="field-label">Workout Time (mins)</label>
+                    <input type="number" id="f_exercise_mins" required value="150" class="field-input" />
+                  </div>
+                  <div class="field-wrap">
+                    <label class="field-label">Used LBNP?</label>
+                    <select id="f_lbnp_done" class="field-input">
+                      <option value="yes">Yes (Completed LBNP)</option>
+                      <option value="no">No / Skipped</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="checkin-category">
+                <div class="category-header">
+                  <span class="category-title">5. Sleep & Water</span>
+                </div>
+                <div class="form-fields-row">
+                  <div class="field-wrap">
+                    <label class="field-label">Sleep (Hours)</label>
+                    <input type="number" step="0.5" id="f_sleep" required value="7.0" class="field-input" />
+                  </div>
+                  <div class="field-wrap">
+                    <label class="field-label">Water Drank (Liters)</label>
+                    <input type="number" step="0.1" id="f_water" required value="2.6" class="field-input" />
+                  </div>
+                  <div class="field-wrap">
+                    <label class="field-label">Fatigue (1-10)</label>
+                    <input type="number" min="1" max="10" id="f_fatigue" required value="3" class="field-input" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fixed-submit-bar">
+              <span id="log-status-msg" style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--green-ok);"></span>
+              <button type="submit" class="graph-tab active" style="padding: 0.55rem 1.8rem; font-size: 0.85rem; font-weight: 700;">
+                ✓ Save Daily Log
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+        <div class="page-end-strip">
+          <span>[ END OF PAGE 04 ]</span>
+          <button class="continue-btn" onclick="jumpToPage(4)">
+            CONTINUE TO LOGBOOK (PAGE 05) ↓
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PAGE 05: LOGBOOK -->
+    <section class="snap-page-container" id="page-logbook">
+      <div class="page-stage">
+        
+        <div class="page-start-strip">
+          <div class="page-start-label">
+            <span class="page-start-pill">PAGE 05 / 07</span>
+            <span data-typewriter="LOGBOOK // ARCHIVE">LOGBOOK // ARCHIVE</span>
+          </div>
+          <div style="color: var(--text-dim);">MISSION RECORD</div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; gap: 0.6rem;">
+          
+          <div class="streak-badge-card" style="padding: 0.65rem 1rem;">
+            <div>
+              <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--green-ok); font-weight: 700; text-transform: uppercase;">
+                LOGGING STREAK
+              </div>
+              <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.15rem;">
+                <span id="compliance-pct">100%</span> Logged
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;">
+                Streak: <strong id="streak-days-count" style="color: var(--green-ok);">100 Days</strong>
+              </div>
+            </div>
+            <div style="text-align: right; font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-dim);">
+              <div>TOTAL: <strong id="total-logs-count" style="color: #fff;">0</strong></div>
+              <div>LATEST: <strong id="latest-logged-day" style="color: var(--cyan-neon);">--</strong></div>
+            </div>
+          </div>
+
+          <div class="hud-box" style="flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0.85rem 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4rem; flex-shrink: 0;">
+              <h4 style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: #fff; text-transform: uppercase;">
+                Recent Entries
+              </h4>
+            </div>
+
+            <div class="sub-scroll" style="flex: 1; min-height: 0; overflow-y: auto; margin-top: 0.35rem; padding-right: 0.3rem;">
+              <table class="logbook-table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Status</th>
+                    <th>Heart Rate</th>
+                    <th>Eye Pressure</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="logbook-table-body"></tbody>
+              </table>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-subtle); padding-top: 0.55rem; margin-top: 0.4rem; display: flex; gap: 0.6rem; flex-shrink: 0;">
+              <button onclick="openModal('paste-modal')" class="chip-btn" style="flex: 1; text-align: center; padding: 0.4rem;">
+                Paste JSON
+              </button>
+              <button onclick="document.getElementById('hidden-file-input').click()" class="chip-btn" style="flex: 1; text-align: center; padding: 0.4rem;">
+                Import File
+              </button>
+              <button onclick="exportDataDossier()" class="chip-btn" style="flex: 1; text-align: center; padding: 0.4rem; border-color: var(--amber-warn); color: var(--amber-warn);">
+                Export Dossier
+              </button>
+              <input type="file" id="hidden-file-input" style="display: none;" onchange="handleFileSelect(event)" accept=".json" />
+            </div>
+          </div>
+        </div>
+
+        <div class="page-end-strip">
+          <span>[ END OF PAGE 05 ]</span>
+          <button class="continue-btn" onclick="jumpToPage(5)">
+            CONTINUE TO 3D BODY (PAGE 06) ↓
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PAGE 06: 3D BODY -->
+    <section class="snap-page-container" id="page-scanner">
+      <div class="page-stage">
+        
+        <div class="page-start-strip">
+          <div class="page-start-label">
+            <span class="page-start-pill">PAGE 06 / 07</span>
+            <span data-typewriter="3D BODY MAP // TOPOGRAPHY">3D BODY MAP // TOPOGRAPHY</span>
+          </div>
+          <div style="color: var(--text-dim);">CLICK AND DRAG TO ROTATE</div>
+        </div>
+
+        <div class="scanner-layout">
+          <div class="canvas-3d-box">
+            <canvas id="canvas3D"></canvas>
+            
+            <div style="position: absolute; top: 1rem; left: 1rem; font-family: var(--font-mono); font-size: 0.72rem; color: var(--cyan-neon); pointer-events: none;">
+              <div id="rot-angle-label" style="color: var(--text-muted);">ANGLE: 0°</div>
+            </div>
+
+            <div style="position: absolute; bottom: 1rem; left: 1rem; right: 1rem; display: flex; justify-content: space-between; z-index: 20;">
+              <button onclick="toggleAutoRotation()" id="autospin-btn" style="background: rgba(9, 18, 32, 0.85); border: 1px solid var(--border-subtle); color: var(--cyan-neon); padding: 0.35rem 0.85rem; border-radius: 6px; font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer;">
+                Auto-Spin: ON
+              </button>
+              <button onclick="reset3DOrientation()" style="background: rgba(9, 18, 32, 0.85); border: 1px solid var(--border-subtle); color: var(--text-muted); padding: 0.35rem 0.85rem; border-radius: 6px; font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer;">
+                Reset View
+              </button>
+            </div>
+          </div>
+
+          <div class="hud-box" style="height: 440px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+                <h4 style="font-family: var(--font-mono); font-size: 0.88rem; font-weight: 700; color: #fff;">
+                  Body Area Check
+                </h4>
+                <span class="status-badge warn" id="hotspot-risk-pill">NORMAL</span>
+              </div>
+
+              <div style="margin-top: 1rem;">
+                <h3 id="hotspot-name" style="font-size: 1.15rem; font-weight: 700; color: var(--amber-warn);">
+                  Eyes (Fluid Pressure)
+                </h3>
+                <p id="hotspot-explanation" style="font-size: 0.84rem; color: var(--text-muted); margin: 0.75rem 0; line-height: 1.55;">
+                  Microgravity shifts fluids headward, increasing optic nerve pressure and altering vision.
+                </p>
+                <div style="background: rgba(7, 13, 23, 0.85); padding: 0.85rem; border-radius: 6px; border: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.76rem;">
+                  <span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span>
+                  Rx: 45-min Lower Body Negative Pressure (LBNP).
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+              <button onclick="inspectBodyPart('sans')" class="graph-tab active" id="btn-part-sans" style="font-size: 0.7rem; padding: 0.35rem 0.65rem;">Eyes</button>
+              <button onclick="inspectBodyPart('ijv')" class="graph-tab" id="btn-part-ijv" style="font-size: 0.7rem; padding: 0.35rem 0.65rem;">Neck</button>
+              <button onclick="inspectBodyPart('heart')" class="graph-tab" id="btn-part-heart" style="font-size: 0.7rem; padding: 0.35rem 0.65rem;">Heart</button>
+              <button onclick="inspectBodyPart('bone')" class="graph-tab" id="btn-part-bone" style="font-size: 0.7rem; padding: 0.35rem 0.65rem;">Bones</button>
+              <button onclick="inspectBodyPart('spine')" class="graph-tab" id="btn-part-spine" style="font-size: 0.7rem; padding: 0.35rem 0.65rem;">Spine</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-end-strip">
+          <span>[ END OF PAGE 06 ]</span>
+          <button class="continue-btn" onclick="jumpToPage(6)">
+            CONTINUE TO PROTOCOLS (PAGE 07) ↓
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PAGE 07: PROTOCOLS -->
+    <section class="snap-page-container" id="page-protocols">
+      <div class="page-stage">
+        
+        <div class="page-start-strip">
+          <div class="page-start-label">
+            <span class="page-start-pill">PAGE 07 / 07</span>
+            <span data-typewriter="TREATMENT PROTOCOLS // COUNTERMEASURES">TREATMENT PROTOCOLS // COUNTERMEASURES</span>
+          </div>
+          <div style="color: var(--text-dim);">SCHEDULED ACTIONS</div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+          <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.85rem;">
+            Daily treatments to prevent vision changes, bone loss, and radiation damage:
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; flex: 1;">
+            
+            <div class="hud-box" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.4rem;">
+              <div>
+                <span class="status-badge alert">EYE & HEAD PRESSURE</span>
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0.75rem 0 0.35rem 0;">LBNP & Braslet Cuffs</h3>
+                <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.55;">
+                  <strong>Why:</strong> Microgravity causes cephalad (headward) fluid shifts, increasing intraocular pressure (SANS). LBNP and thigh cuffs pull fluids back to the lower extremities.
+                </p>
+              </div>
+              <div style="background: rgba(7, 13, 23, 0.85); padding: 0.85rem; border-radius: 6px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--cyan-neon); border: 1px solid var(--border-subtle); margin-top: 1.25rem;">
+                Use: 45 min at -25 mmHg LBNP before sleep.
+              </div>
+            </div>
+
+            <div class="hud-box" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.4rem;">
+              <div>
+                <span class="status-badge ok">BONE STRENGTH</span>
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0.75rem 0 0.35rem 0;">ARED & CEVIS Exercise</h3>
+                <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.55;">
+                  <strong>Why:</strong> Weight-bearing bones lose 1-1.5% calcium per month in zero-G. High-load resistive exercise (ARED) and cardiovascular cycling (CEVIS) stimulate bone remodeling.
+                </p>
+              </div>
+              <div style="background: rgba(7, 13, 23, 0.85); padding: 0.85rem; border-radius: 6px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--green-ok); border: 1px solid var(--border-subtle); margin-top: 1.25rem;">
+                Use: 2.5 hrs/day total (e.g., 4x8 squats).
+              </div>
+            </div>
+
+            <div class="hud-box" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.4rem;">
+              <div>
+                <span class="status-badge warn">RADIATION DEFENSE</span>
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0.75rem 0 0.35rem 0;">Dosimetry & SPE Shielding</h3>
+                <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.55;">
+                  <strong>Why:</strong> Deep space exposes crew to Galactic Cosmic Rays (GCRs) and Solar Particle Events (SPEs). Tissue Equivalent Proportional Counters (TEPC) monitor real-time dose.
+                </p>
+              </div>
+              <div style="background: rgba(7, 13, 23, 0.85); padding: 0.85rem; border-radius: 6px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--amber-warn); border: 1px solid var(--border-subtle); margin-top: 1.25rem;">
+                Use: Move to water-shielded core if dose spikes.
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="page-end-strip">
+          <span>[ END OF PAGE 07 ]</span>
+          <button class="continue-btn" onclick="jumpToPage(0)">
+            RETURN TO OVERVIEW (PAGE 01) ↑
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODALS: PASTE DATA -->
+  <div class="modal-backdrop" id="paste-modal">
+    <div class="modal-window">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        <h3 style="font-family: var(--font-mono); font-size: 1rem; font-weight: 700; color: #fff;">PASTE DATA (JSON)</h3>
+        <button onclick="closeModal('paste-modal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer;">✕</button>
+      </div>
+
+      <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.6rem;">
+        Paste JSON below or test with a sample:
+      </p>
+
+      <div class="preset-chips-row">
+        <button class="chip-btn" onclick="loadTestPreset('solar_storm')">Solar Storm (Day 250)</button>
+        <button class="chip-btn" onclick="loadTestPreset('sans_spike')">Eye Pressure (Day 251)</button>
+        <button class="chip-btn" onclick="loadTestPreset('nominal_recovery')">Normal Day (Day 252)</button>
+      </div>
+
+      <textarea id="paste-input" class="json-input-box sub-scroll" placeholder='{ "days": { "249": { "ijv_csa": 74.2, ... } } }'></textarea>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem;">
+        <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);">JSON format</span>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="graph-tab" onclick="closeModal('paste-modal')">Cancel</button>
+          <button class="graph-tab active" onclick="commitPastedPayload()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CACHE_KEY = "AEGIS_BIO_SAFE_V20";
+    let bioStore = null;
+    let currentDomain = 'cardio';
+    let selectedDay = 249;
+    let calendarViewMode = 'recent';
+    
+    let isPageTransitioning = false;
+    let activePageIndex = 0;
+    let wheelLock = false;
+
+    const $ = (id) => document.getElementById(id);
+    const setText = (id, text) => { const el = $(id); if (el) el.innerText = text; };
+    const setHtml = (id, html) => { const el = $(id); if (el) el.innerHTML = html; };
+    const setVal = (id, val) => { const el = $(id); if (el) el.value = val; };
+    const setStyle = (id, prop, val) => { const el = $(id); if (el) el.style[prop] = val; };
+
+    function typewriteText(element, fullText, speed = 18) {
+      if (!element) return;
+      clearInterval(element._twTimer);
+      element.innerText = '';
+      element.classList.add('typing-cursor');
+      let i = 0;
+      element._twTimer = setInterval(() => {
+        if (i < fullText.length) {
+          element.innerText = fullText.slice(0, i + 1);
+          i++;
+        } else {
+          clearInterval(element._twTimer);
+          element.classList.remove('typing-cursor');
+        }
+      }, speed);
+    }
+
+    function typewriteHtml(element, htmlContent, speed = 12) {
+      if (!element) return;
+      clearInterval(element._twTimer);
+      element.innerHTML = '';
+      element.classList.add('typing-cursor');
+
+      const tokens = htmlContent.match(/(<[^>]+>|[^<])/g) || [];
+      let current = '';
+      let i = 0;
+
+      element._twTimer = setInterval(() => {
+        if (i < tokens.length) {
+          current += tokens[i];
+          element.innerHTML = current;
+          i++;
+        } else {
+          clearInterval(element._twTimer);
+          element.classList.remove('typing-cursor');
+        }
+      }, speed);
+    }
+
+    function triggerPageEntranceAnimations(targetIndex) {
+      const pages = document.querySelectorAll('.snap-page-container');
+      const targetPage = pages[targetIndex];
+      if (!targetPage) return;
+
+      const twTarget = targetPage.querySelector('[data-typewriter]');
+      if (twTarget) {
+        const text = twTarget.getAttribute('data-typewriter');
+        typewriteText(twTarget, text, 18);
+      }
+
+      targetPage.classList.add('page-animating');
+      setTimeout(() => {
+        targetPage.classList.remove('page-animating');
+      }, 40);
+    }
+
+    const LOCAL_AI_MODEL = {
+      norm_mean: [68.3607, 5.5971, 1.7929, 249.1217, 64.0404, 2.6965, 62.243, 58.1598, 6.8335, 2.5011, 5.519, 0.3055, 5.572, 0.0485],
+      norm_std: [7.9057, 0.4523, 2.4321, 56.4256, 9.6823, 0.3461, 8.0923, 14.1399, 1.1994, 0.4019, 2.8124, 0.556, 2.8356, 0.1516],
+      w1: [[27, 81, -33, -34, -26, 9, 13, 12, 30, 23, -16, 40, 49, 13, 36, -47],[8, -47, -27, -2, -62, 81, -23, -8, 57, -15, 15, 19, -31, 94, -46, 91],[-44, 30, -41, 11, -79, -6, -4, -24, -31, -30, -73, -76, 24, 96, 13, -85],[19, 46, -9, -4, -5, 7, -7, 5, -53, -22, -34, -40, 17, 14, 28, -3],[63, -59, 14, -20, -2, -20, 61, 10, 17, 5, -36, -29, 6, -1, 35, 9],[-62, -37, -39, 8, 6, 53, -23, 18, -58, 5, 36, -15, 11, -16, -33, -26],[-1, 2, -27, -60, -42, -34, 40, -51, 38, 63, -2, 5, 17, -3, 56, -17],[6, -82, 52, 52, 47, 18, -29, -40, -3, -2, -7, -29, 8, -12, -35, 79],[-19, -60, -40, 10, 6, -30, -15, 39, -4, -21, -26, 53, -3, 8, -56, 6],[74, 56, -18, 41, 22, 51, 10, 35, -56, -7, -17, 18, 27, 0, 35, -27],[-45, -32, -8, 2, -25, 43, 6, 15, 22, 19, -12, 32, -54, 62, 21, 104],[-49, -26, -6, -15, -21, 42, 27, 20, -39, 58, -34, -44, -41, 10, 5, 127],[-52, 55, 53, -22, 11, 46, 9, -86, 83, 17, -23, -19, -38, 2, -5, -25],[18, -91, -18, -50, -12, 45, 6, -58, 5, -1, 34, -28, -38, 80, 77, 101]],
+      s_w1: 0.00944,
+      b1: [0.132, 0.1224, 0.3814, 0.4744, 0.1226, 0.4541, 0.0912, -0.0115, 0.1801, 0.149, 0.2575, 0.3807, 0.0663, 0.7544, 0.0939, 0.3579],
+      w2: [[18, 7, -16, 42, -17, -24],[-13, 19, 5, -6, 24, 51],[-6, -30, 2, 38, 37, -127],[-14, -62, 19, -2, -4, -98],[-26, -10, -30, -14, 2, -49],[35, 1, -19, -25, 36, 58],[-24, -14, -15, 56, 12, 53],[10, 18, -7, 12, -24, 13],[5, 9, -25, 15, 19, 57],[8, 56, -1, -19, 2, 15],[5, 0, -46, -31, -12, 0],[4, 28, -43, 0, -26, 27],[-42, 16, 16, -13, -16, 21],[23, 7, 46, 13, 5, 107],[10, 12, 2, -6, 5, 39],[26, -18, -17, 7, -20, 90]],
+      s_w2: 0.01181, b2: [0.1144, 0.2949, -0.2348, 0.0407, 0.1215, 0.3245]
+    };
+
+    function runQuantizedNeuralInference(rawFeatures) {
+      const norm = rawFeatures.map((x, i) => (x - LOCAL_AI_MODEL.norm_mean[i]) / (LOCAL_AI_MODEL.norm_std[i] || 1e-7));
+      const z1 = new Array(16).fill(0);
+      for (let j = 0; j < 16; j++) {
+        let sum = LOCAL_AI_MODEL.b1[j];
+        for (let i = 0; i < 14; i++) sum += norm[i] * (LOCAL_AI_MODEL.w1[i][j] * LOCAL_AI_MODEL.s_w1);
+        z1[j] = Math.max(0, sum);
+      }
+      const z2 = new Array(6).fill(0);
+      for (let k = 0; k < 6; k++) {
+        let sum = LOCAL_AI_MODEL.b2[k];
+        for (let j = 0; j < 16; j++) sum += z1[j] * (LOCAL_AI_MODEL.w2[j][k] * LOCAL_AI_MODEL.s_w2);
+        z2[k] = 1 / (1 + Math.exp(-Math.max(-15, Math.min(15, sum))));
+      }
+      return { sans_risk: z2[0], cardio_stasis: z2[1], rad_risk: z2[2], bone_resorption: z2[3], immune_strain: z2[4], urgent_priority: z2[5] };
+    }
+
+    function generate100DayDataset() {
+      const days = {}; let cumRad = 115.0; const startDay = 150; const endDay = 249;
+      for (let d = startDay; d <= endDay; d++) {
+        const progress = (d - startDay) / 100;
+        const onsd = parseFloat((5.15 + (progress * 0.85) + (Math.sin(d * 0.45) * 0.1)).toFixed(2));
+        const ijv = parseFloat((63.0 + (progress * 8.5) + (Math.cos(d * 0.35) * 4.2)).toFixed(1));
+        const ntx = parseFloat((52.0 + (progress * 18.0) + (Math.sin(d * 0.6) * 3.0)).toFixed(1));
+        
+        let rad = parseFloat((1.38 + (Math.sin(d * 0.25) * 0.22)).toFixed(2));
+        let status = 'nominal'; let alertTitle = 'Normal Flight State'; let alertDetail = `Day ${d} telemetry within safe limits.`;
+
+        if (d === 184 || d === 245) {
+          rad = d === 245 ? 14.80 : 11.20;
+          status = 'hazard'; alertTitle = 'Solar Storm Event'; alertDetail = `High radiation detected (${rad} mSv).`;
+        } else if (onsd > 5.85 || ijv > 72.0) {
+          status = 'advisory'; alertTitle = 'Head Fluid & Eye Strain'; alertDetail = `Neck veins swollen (${ijv} mm²). Eye pressure elevated (${onsd} mm).`;
+        }
+        cumRad = parseFloat((cumRad + rad).toFixed(2));
+
+        days[d] = {
+          status, ijv_csa: ijv, lv_mass_delta: parseFloat((-3.0 - (progress * 3.5)).toFixed(1)),
+          onsd: onsd, rnfl_thickness: Math.round(onsd * 20), rad_daily: rad, rad_cumulative: cumRad,
+          ntx_resorption: ntx, ared_peak_force: parseFloat((2.65 + (Math.sin(d * 0.8) * 0.3)).toFixed(2)),
+          ebv_copies: status === 'hazard' ? 1850 : Math.round(100 + (progress * 280) + Math.random() * 60),
+          cortisol: parseFloat((13.0 + (progress * 5.0) + (status === 'hazard' ? 12 : 0)).toFixed(1)),
+          resting_hr: Math.round(56 + (progress * 5) + (status === 'hazard' ? 14 : 0)),
+          hrv_rmssd: parseFloat((68.0 - (progress * 8.0) - (status === 'hazard' ? 20 : 0)).toFixed(1)),
+          sleep_hours: parseFloat((7.6 - (status === 'hazard' ? 2.8 : Math.random() * 1.1)).toFixed(1)),
+          water_liters: parseFloat((2.5 + (Math.sin(d) * 0.25)).toFixed(1)),
+          head_fullness: status === 'hazard' ? 8 : (onsd > 5.85 ? 5 : 2),
+          vision: status === 'hazard' ? 'severe_blur' : (onsd > 5.95 ? 'mild_blur' : 'clear'),
+          fatigue: status === 'hazard' ? 8 : (progress > 0.7 ? 4 : 2),
+          alertTitle, alertDetail
+        };
+      }
+      return { metadata: { mission: "EXPEDITION 73", subject: "CDR. VANCE, ALEXANDER", total_days: 100 }, days };
+    }
+
+    /* CUSTOM SCROLL ENGINE */
+    function canScrollChild(el, deltaY) {
+      if (deltaY > 0) return Math.ceil(el.scrollTop + el.clientHeight) < el.scrollHeight - 1;
+      if (deltaY < 0) return el.scrollTop > 1;
+      return false;
+    }
+
+    function checkSubScroll(e, deltaY) {
+      let el = e.target;
+      while (el && el !== document.body) {
+        if (el.classList && el.classList.contains('sub-scroll')) {
+          if (canScrollChild(el, deltaY)) return true;
+        }
+        el = el.parentElement;
+      }
+      return false;
+    }
+
+    function setupScrollEngine() {
+      const container = $('snapContainer'); const pages = document.querySelectorAll('.snap-page-container');
+
+      window.addEventListener('wheel', (e) => {
+        if (checkSubScroll(e, e.deltaY)) return; // Allow native scroll inside box
+        e.preventDefault(); // Stop native page scroll
+        if (wheelLock || isPageTransitioning) return;
+
+        if (Math.abs(e.deltaY) > 20) {
+          wheelLock = true;
+          if (e.deltaY > 0 && activePageIndex < pages.length - 1) jumpToPage(activePageIndex + 1);
+          else if (e.deltaY < 0 && activePageIndex > 0) jumpToPage(activePageIndex - 1);
+          setTimeout(() => { wheelLock = false; }, 600);
+        }
+      }, { passive: false });
+
+      let touchStartY = 0;
+      window.addEventListener('touchstart', (e) => { 
+        if (e.touches.length === 1) touchStartY = e.touches[0].clientY; 
+      }, { passive: true });
+      
+      window.addEventListener('touchmove', (e) => { 
+        if (e.touches.length === 1) {
+           const deltaY = touchStartY - e.touches[0].clientY;
+           if (!checkSubScroll(e, deltaY)) e.preventDefault(); 
+        }
+      }, { passive: false });
+      
+      window.addEventListener('touchend', (e) => {
+        if (wheelLock || isPageTransitioning) return;
+        const touchEndY = e.changedTouches[0].clientY; 
+        const deltaY = touchStartY - touchEndY;
+        
+        if (checkSubScroll(e, deltaY)) return;
+
+        if (Math.abs(deltaY) > 35) {
+          wheelLock = true;
+          if (deltaY > 0 && activePageIndex < pages.length - 1) jumpToPage(activePageIndex + 1);
+          else if (deltaY < 0 && activePageIndex > 0) jumpToPage(activePageIndex - 1);
+          setTimeout(() => { wheelLock = false; }, 600);
+        }
+      }, { passive: true });
+
+      window.addEventListener('keydown', (e) => {
+        if (['input', 'textarea', 'select'].includes(document.activeElement.tagName.toLowerCase())) return;
+        if (isPageTransitioning || wheelLock) { e.preventDefault(); return; }
+        if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+          e.preventDefault(); wheelLock = true;
+          if (activePageIndex < pages.length - 1) jumpToPage(activePageIndex + 1);
+          setTimeout(() => { wheelLock = false; }, 600);
+        } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+          e.preventDefault(); wheelLock = true;
+          if (activePageIndex > 0) jumpToPage(activePageIndex - 1);
+          setTimeout(() => { wheelLock = false; }, 600);
+        }
+      }, { passive: false });
+    }
+
+    function updateNavPills(index) {
+      document.querySelectorAll('.nav-tab-btn').forEach((btn, i) => {
+        if (i === index) btn.classList.add('active'); else btn.classList.remove('active');
+      });
+    }
+
+    function jumpToPage(targetIndex) {
+      const container = $('snapContainer'); const pages = document.querySelectorAll('.snap-page-container');
+      if (!pages[targetIndex] || isPageTransitioning) return;
+
+      activePageIndex = targetIndex; updateNavPills(targetIndex);
+      const startY = container.scrollTop; const targetY = Math.round(pages[targetIndex].offsetTop);
+      const distance = targetY - startY; const duration = 500; const startTime = performance.now();
+
+      isPageTransitioning = true;
+      document.body.classList.add('shifting'); // Trigger zoom out
+      triggerPageEntranceAnimations(targetIndex);
+
+      function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+
+      function step(currentTime) {
+        const elapsed = currentTime - startTime; const progress = Math.min(elapsed / duration, 1);
+        container.scrollTop = startY + distance * easeOutQuart(progress);
+        
+        if (progress < 1) requestAnimationFrame(step); 
+        else { 
+          container.scrollTop = targetY; 
+          document.body.classList.remove('shifting'); // Trigger zoom back in
+          setTimeout(() => { isPageTransitioning = false; }, 100); 
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      setupScrollEngine();
+      initializeStorage();
+      setupDetailed3DModel();
+      triggerPageEntranceAnimations(0);
+    });
+
+    function initializeStorage() {
+      const stored = localStorage.getItem(CACHE_KEY);
+      if (stored) {
+        try {
+          bioStore = JSON.parse(stored);
+          const keys = Object.keys(bioStore.days).map(Number).sort((a,b)=>a-b);
+          selectedDay = keys[keys.length - 1];
+          $('cache-pill').className = "status-badge ok";
+          $('clean-state-shield').style.display = "none";
+          updateNextLogDayInput(); renderEverything();
+          return;
+        } catch (e) { console.error("Cache load error", e); }
+      }
+      resetAllToGroundState();
+    }
+
+    function load100DayResearchSimulation() {
+      bioStore = generate100DayDataset(); localStorage.setItem(CACHE_KEY, JSON.stringify(bioStore));
+      $('clean-state-shield').style.display = "none"; $('cache-pill').className = "status-badge ok";
+      selectedDay = 249; updateNextLogDayInput(); renderEverything();
+      showIngestBanner("100-Day Simulation loaded (Days 150 to 249).");
+    }
+
+    function purgeStorageCache() {
+      if (!confirm("Reset everything? This will clear all data and start clean.")) return;
+      localStorage.removeItem(CACHE_KEY); resetAllToGroundState(); jumpToPage(0);
+    }
+
+    function resetAllToGroundState() {
+      bioStore = null; selectedDay = null; currentDomain = 'cardio';
+      $('cache-pill').className = "status-badge warn"; $('clean-state-shield').style.display = "flex";
+      setText('header-day-label', "--"); setText('cal-inspect-day-label', "NO DATA");
+      setText('vitals-day-label', "NO DATA"); setText('matrix-day-label', "--");
+      setText('chart-window-tag', "AWAITING DATA"); setText('quick-log-day-num', "1"); setVal('daily-log-day-input', "1");
+      updateGlobalAlertBanner('nominal', 'HEALTH STATUS: NO DATA');
+      $('cockpitAlertHero').className = 'cockpit-alert-hero nominal'; $('cockpit-alert-badge').className = "status-badge ok";
+      $('cockpit-alert-badge').innerText = "READY"; setText('cockpit-alert-action-tag', "AWAITING DATA");
+      setText('cockpit-alert-title', "No Active Telemetry"); setText('cockpit-alert-desc', "Load the 100-day simulation or submit a check-in.");
+      
+      const bars = ['sans', 'cardio', 'rad', 'bone', 'urgent'];
+      bars.forEach(b => { setStyle(`meter-${b}`, 'width', '0%'); setText(`val-${b}`, '--%'); });
+      setText('ai-agent-narrative', "No data. Load simulation or log today's check-in.");
+      setHtml('calendar-grid-box', '<div style="grid-column: 1/-1; text-align: center; color: var(--text-dim); font-size: 0.76rem; padding: 2rem 0; font-family: var(--font-mono);">No calendar data.</div>');
+      setText('calendar-summary-stat', "0 Days Logged");
+      setHtml('metrics-matrix-box', '<div style="grid-column: 1/-1; text-align: center; color: var(--text-dim); font-size: 0.76rem; padding: 2rem 0; font-family: var(--font-mono);">No metrics.</div>');
+      setHtml('logbook-table-body', '<tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 1.5rem 0;">No logs.</td></tr>');
+      setText('compliance-pct', "0%"); setText('streak-days-count', "0 Days"); setText('total-logs-count', "0"); setText('latest-logged-day', "--");
+      $('dailyCheckinForm').reset(); setText('head-val', "4"); drawEmptyChart();
+    }
+
+    function updateNextLogDayInput() {
+      if (!bioStore || !bioStore.days) { setVal('daily-log-day-input', 250); setText('quick-log-day-num', 250); return; }
+      const days = Object.keys(bioStore.days).map(Number).sort((a,b)=>a-b);
+      const nextDay = (days[days.length - 1] || 249) + 1;
+      setVal('daily-log-day-input', nextDay); setText('quick-log-day-num', nextDay);
+    }
+
+    function updateGlobalAlertBanner(status, message) {
+      const banner = $('globalAlertBanner'); if (!banner) return;
+      banner.className = `global-alert-banner ${status}`;
+      setText('banner-text', message); setText('banner-icon', (status === 'hazard') ? '🚨' : (status === 'advisory') ? '⚠️' : '🟢');
+    }
+
+    function evaluateLocalAiAgent(dayNumber) {
+      if (!bioStore || !bioStore.days || !bioStore.days[dayNumber]) return;
+      const d = bioStore.days[dayNumber];
+      let trendOnsd = 0.0; if (bioStore.days[dayNumber - 5]) trendOnsd = (d.onsd - bioStore.days[dayNumber - 5].onsd) / 5.0;
+
+      let visionCode = 0;
+      if (d.vision === 'mild_blur') visionCode = 1; else if (d.vision === 'severe_blur') visionCode = 2; else if (d.onsd > 6.1) visionCode = 1;
+
+      const headScore = d.head_fullness || (d.onsd > 6.0 ? 5 : 2);
+      const fatigueScore = d.fatigue || (d.status === 'hazard' ? 8 : 3);
+      const features = [d.ijv_csa || 65.0, d.onsd || 5.5, d.rad_daily || 1.5, d.rad_cumulative || 250.0, d.ntx_resorption || 60.0, d.ared_peak_force || 2.7, d.resting_hr || 60, d.hrv_rmssd || 60.0, d.sleep_hours || 7.0, d.water_liters || 2.5, headScore, visionCode, fatigueScore, trendOnsd];
+
+      const pred = runQuantizedNeuralInference(features);
+
+      setStyle('meter-sans', 'width', `${Math.round(pred.sans_risk * 100)}%`); setText('val-sans', `${Math.round(pred.sans_risk * 100)}%`);
+      setStyle('meter-cardio', 'width', `${Math.round(pred.cardio_stasis * 100)}%`); setText('val-cardio', `${Math.round(pred.cardio_stasis * 100)}%`);
+      setStyle('meter-rad', 'width', `${Math.round(pred.rad_risk * 100)}%`); setText('val-rad', `${Math.round(pred.rad_risk * 100)}%`);
+      setStyle('meter-bone', 'width', `${Math.round(pred.bone_resorption * 100)}%`); setText('val-bone', `${Math.round(pred.bone_resorption * 100)}%`);
+      setStyle('meter-urgent', 'width', `${Math.round(pred.urgent_priority * 100)}%`); setText('val-urgent', `${Math.round(pred.urgent_priority * 100)}%`);
+
+      const hero = $('cockpitAlertHero'); const badge = $('cockpit-alert-badge');
+      const triPath = $('hazard-triangle-path'); const triL1 = $('hazard-line-1'); const triL2 = $('hazard-line-2');
+
+      if (pred.rad_risk > 0.7 || d.status === 'hazard' || pred.sans_risk > 0.9) {
+        if (hero) hero.className = 'cockpit-alert-hero hazard'; if (badge) { badge.className = 'status-badge alert'; badge.innerText = 'ALERT'; }
+        setText('cockpit-alert-action-tag', 'ACTION NEEDED'); const tag = $('cockpit-alert-action-tag'); if (tag) tag.style.color = 'var(--red-alert)';
+        if (triPath) triPath.setAttribute('stroke', 'var(--red-alert)'); if (triL1) triL1.setAttribute('stroke', 'var(--red-alert)'); if (triL2) triL2.setAttribute('stroke', 'var(--red-alert)');
+
+        const alertTitleText = (pred.rad_risk > 0.7) ? `Solar Storm (${d.rad_daily} mSv)` : `High Eye Pressure (${d.onsd} mm)`;
+        setText('cockpit-alert-title', alertTitleText);
+        setText('cockpit-alert-desc', (pred.rad_risk > 0.7) ? `Radiation is high (${d.rad_daily} mSv). Move to storm shelter.` : `Eye pressure is high (${d.onsd} mm). Wear LBNP device.`);
+        updateGlobalAlertBanner('hazard', `🚨 CRITICAL (DAY ${dayNumber}): ${alertTitleText} — ACTION NEEDED`);
+      } else if (pred.sans_risk > 0.6 || pred.cardio_stasis > 0.65 || pred.bone_resorption > 0.7 || d.status === 'advisory') {
+        if (hero) hero.className = 'cockpit-alert-hero advisory'; if (badge) { badge.className = 'status-badge warn'; badge.innerText = 'WARNING'; }
+        setText('cockpit-alert-action-tag', 'TREATMENT RECOMMENDED'); const tag = $('cockpit-alert-action-tag'); if (tag) tag.style.color = 'var(--amber-warn)';
+        if (triPath) triPath.setAttribute('stroke', 'var(--amber-warn)'); if (triL1) triL1.setAttribute('stroke', 'var(--amber-warn)'); if (triL2) triL2.setAttribute('stroke', 'var(--amber-warn)');
+
+        const warnTitleText = (pred.sans_risk > 0.6) ? `Fluid Pooling in Head` : `Fast Bone Calcium Loss`;
+        setText('cockpit-alert-title', warnTitleText);
+        setText('cockpit-alert-desc', `Neck veins swollen (${d.ijv_csa} mm²). Eye pressure at ${d.onsd} mm.`);
+        updateGlobalAlertBanner('advisory', `⚠️ WARNING (DAY ${dayNumber}): ${warnTitleText} — USE LBNP DEVICE`);
+      } else {
+        if (hero) hero.className = 'cockpit-alert-hero nominal'; if (badge) { badge.className = 'status-badge ok'; badge.innerText = 'NORMAL'; }
+        setText('cockpit-alert-action-tag', 'ON TRACK'); const tag = $('cockpit-alert-action-tag'); if (tag) tag.style.color = 'var(--green-ok)';
+        if (triPath) triPath.setAttribute('stroke', 'var(--green-ok)'); if (triL1) triL1.setAttribute('stroke', 'var(--green-ok)'); if (triL2) triL2.setAttribute('stroke', 'var(--green-ok)');
+
+        setText('cockpit-alert-title', `All Vitals Normal`);
+        setText('cockpit-alert-desc', `Body is adapting normally to zero gravity.`);
+        updateGlobalAlertBanner('nominal', `HEALTH STATUS: NORMAL (DAY ${dayNumber})`);
+      }
+
+      let narrative = `<strong>Today's Assessment (Day ${dayNumber}):</strong><br/>`;
+      if (pred.rad_risk > 0.7) narrative += `• <span style="color: var(--red-alert);">High Radiation:</span> Flare dose is ${d.rad_daily} mSv.<br/>`;
+      else if (d.onsd > 6.0) narrative += `• <span style="color: var(--amber-warn);">Eye Pressure High:</span> Sheath is ${d.onsd} mm (safe: <5.8 mm). Head fluids pressing on eyes.<br/>`;
+      else if (d.ijv_csa > 70) narrative += `• <span style="color: var(--amber-warn);">Neck Veins Swollen:</span> ${d.ijv_csa} mm² due to upward fluid shift.<br/>`;
+      else narrative += `• <span style="color: var(--green-ok);">Stable:</span> All readings within safe flight limits.<br/>`;
+
+      if (d.sleep_hours && d.sleep_hours < 6.0) narrative += `• <span style="color: var(--amber-warn);">Sleep Shortage:</span> Only ${d.sleep_hours} hrs logged.<br/>`;
+
+      narrative += `<strong style="color: var(--cyan-neon);">Action Plan:</strong> `;
+      if (pred.rad_risk > 0.7) narrative += `Stay in shelter 16 hrs. Take radiation defense vitamins.`;
+      else if (d.onsd > 6.0) narrative += `Wear LBNP device 45 min at bedtime. Keep sodium low (<2,000 mg).`;
+      else if (d.ntx_resorption > 70) narrative += `Add 5 kg to deadlift workout today. Take calcium with dinner.`;
+      else narrative += `Complete 2.5 hr workout and drink 2.6 L of water.`;
+
+      typewriteHtml($('ai-agent-narrative'), narrative, 12);
+    }
+
+    function askAiQuestion(topic) {
+      if (!bioStore || !bioStore.days || !bioStore.days[selectedDay]) { alert("Please load simulation or log a day first."); return; }
+      const d = bioStore.days[selectedDay]; let answer = '';
+
+      if (topic === 'sans') {
+        answer = `<strong>Eye Check (Day ${selectedDay}):</strong><br/>Eye pressure sheath is <strong>${d.onsd} mm</strong> (safe is <5.8 mm). Zero gravity moves fluids to your head (SANS). <strong>Use:</strong> Wear LBNP device 45 mins before sleep to pull fluids down.`;
+      } else if (topic === 'workout') {
+        answer = `<strong>Workout Plan (Day ${selectedDay}):</strong><br/>Bone loss marker is <strong>${d.ntx_resorption} BCE</strong> (Earth normal: 32). <strong>Prescription:</strong> 4 sets of 8 deadlifts on ARED, then 30 mins CEVIS cycle ergometer.`;
+      } else if (topic === 'radiation') {
+        answer = `<strong>Radiation Status (Day ${selectedDay}):</strong><br/>Today: <strong>${d.rad_daily} mSv</strong> | Total: <strong>${d.rad_cumulative} mSv</strong> (Career limit: 600 mSv). ${(d.rad_daily > 5 ? '⚠️ Solar Particle Event (SPE) occurs, move to shielded water-wall.' : 'Exposure is safe within ship shielding.')}`;
+      } else if (topic === 'trend') {
+        const days = Object.keys(bioStore.days).map(Number).sort((a,b)=>a-b);
+        answer = `<strong>100-Day Summary:</strong><br/>Analyzed ${days.length} days. Eye pressure has averaged 5.8 mm and bone loss is steady at 0.8%/month. Overall health is <strong>stable and flight-ready</strong>.`;
+      }
+      typewriteHtml($('ai-agent-narrative'), answer, 12);
+    }
+
+    function quickOpenDailyLog() { jumpToPage(3); const hrInput = $('f_hr'); if (hrInput) hrInput.focus(); }
+
+    function autoFillHealthyNominal() {
+      setVal('f_hr', 58); setVal('f_bp', "118/76"); setVal('f_ijv', 60.5); setVal('f_hrv', 68.0);
+      setVal('f_onsd', 5.30); setVal('f_head_slider', 2); setText('head-val', 2); setVal('f_vision', "clear");
+      setVal('f_rad', 1.40); setVal('f_ntx', 56.0); setVal('f_ebv', 110); setVal('f_ared', 2.9);
+      setVal('f_exercise_mins', 150); setVal('f_lbnp_done', "yes"); setVal('f_sleep', 7.5); setVal('f_water', 2.7); setVal('f_fatigue', 2);
+      showIngestBanner("Form filled with normal draft.");
+    }
+
+    function copyYesterdayValues() {
+      if (!bioStore || !bioStore.days) return;
+      const days = Object.keys(bioStore.days).map(Number).sort((a,b)=>a-b);
+      const prev = bioStore.days[days[days.length - 1]]; if (!prev) return;
+      setVal('f_hr', prev.resting_hr || 60); setVal('f_ijv', prev.ijv_csa || 72.0); setVal('f_hrv', prev.hrv_rmssd || 60.0);
+      setVal('f_onsd', prev.onsd || 5.9); setVal('f_rad', prev.rad_daily || 1.8); setVal('f_ntx', prev.ntx_resorption || 68.0);
+      setVal('f_ebv', prev.ebv_copies || 350); setVal('f_ared', prev.ared_peak_force || 2.7); setVal('f_sleep', prev.sleep_hours || 7.0); setVal('f_water', prev.water_liters || 2.5);
+      showIngestBanner(`Copied Day ${days[days.length - 1]}.`);
+    }
+
+    function submitComprehensiveDailyLog(e) {
+      e.preventDefault();
+      const day = parseInt($('daily-log-day-input').value);
+      const hr = parseInt($('f_hr').value), bp = $('f_bp').value, ijv = parseFloat($('f_ijv').value);
+      const hrv = parseFloat($('f_hrv').value), onsd = parseFloat($('f_onsd').value), headScore = parseInt($('f_head_slider').value);
+      const vision = $('f_vision').value, rad = parseFloat($('f_rad').value), ntx = parseFloat($('f_ntx').value);
+      const ebv = parseInt($('f_ebv').value), ared = parseFloat($('f_ared').value), sleep = parseFloat($('f_sleep').value);
+      const water = parseFloat($('f_water').value), fatigue = parseInt($('f_fatigue').value);
+
+      if (!bioStore) bioStore = { metadata: { mission: "EXPEDITION 73", subject: "CDR. VANCE, ALEXANDER" }, days: {} };
+
+      let status = 'nominal'; let alertTitle = 'Normal Flight State'; let alertDetail = `Day ${day} readings within safe limits.`;
+      if (rad > 5.0 || onsd > 6.15 || vision === 'severe_blur') { status = 'hazard'; alertTitle = 'Radiation or Eye Alert'; alertDetail = `Day ${day} readings need immediate attention.`; }
+      else if (onsd > 5.8 || ijv > 70.0 || ntx > 65.0 || headScore >= 6) { status = 'advisory'; alertTitle = 'Fluid & Eye Warning'; alertDetail = `Day ${day} shows elevated head fluid pressure.`; }
+
+      bioStore.days[day] = {
+        status, ijv_csa: ijv, lv_mass_delta: -5.5, onsd: onsd, rnfl_thickness: Math.round(onsd * 20),
+        rad_daily: rad, rad_cumulative: 280.0 + rad, ntx_resorption: ntx, ared_peak_force: ared,
+        ebv_copies: ebv, cortisol: fatigue * 3.5, resting_hr: hr, blood_pressure: bp, hrv_rmssd: hrv,
+        sleep_hours: sleep, water_liters: water, head_fullness: headScore, vision: vision, fatigue: fatigue, alertTitle, alertDetail
+      };
+
+      localStorage.setItem(CACHE_KEY, JSON.stringify(bioStore)); $('clean-state-shield').style.display = "none"; $('cache-pill').className = "status-badge ok";
+      selectedDay = day; updateNextLogDayInput(); renderEverything();
+      showIngestBanner(`✓ Day ${day} saved!`);
+    }
+
+    function renderLogbookHistory() {
+      const tbody = $('logbook-table-body'); if (!tbody) return; tbody.innerHTML = '';
+      if (!bioStore || !bioStore.days) { setText('compliance-pct', "0%"); setText('total-logs-count', "0"); setText('streak-days-count', "0 Days"); setText('latest-logged-day', "--"); return; }
+      const days = Object.keys(bioStore.days).map(Number).sort((a,b)=>b-a);
+      setText('total-logs-count', days.length); setText('latest-logged-day', `Day ${days[0] || '--'}`); setText('streak-days-count', `${days.length} Days`);
+      setText('compliance-pct', `${Math.min(100, Math.round((days.length / (days[0] - days[days.length-1] + 1 || 1)) * 100))}%`);
+      days.slice(0, 10).forEach(d => {
+        const item = bioStore.days[d]; const tr = document.createElement('tr');
+        let statusBadge = `<span class="status-badge ok" style="font-size: 0.62rem; padding: 0.1rem 0.35rem;">OK</span>`;
+        if (item.status === 'hazard') statusBadge = `<span class="status-badge alert" style="font-size: 0.62rem; padding: 0.1rem 0.35rem;">ALERT</span>`;
+        else if (item.status === 'advisory') statusBadge = `<span class="status-badge warn" style="font-size: 0.62rem; padding: 0.1rem 0.35rem;">WARN</span>`;
+        tr.innerHTML = `<td><strong style="color: #fff;">Day ${d}</strong></td><td>${statusBadge}</td><td>${item.resting_hr || '--'} bpm</td><td>${item.onsd || '--'} mm</td><td><button onclick="loadDayIntoCockpit(${d})" class="chip-btn" style="padding: 0.2rem 0.5rem; font-size: 0.68rem;">View ➔</button></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function loadDayIntoCockpit(day) { selectedDay = day; renderEverything(); jumpToPage(0); }
+
+    function renderEverything() {
+      if (!bioStore || !selectedDay) return;
+      setText('header-day-label', selectedDay); setText('cal-inspect-day-label', `DAY ${selectedDay}`);
+      setText('vitals-day-label', selectedDay); setText('matrix-day-label', selectedDay);
+      renderCalendar(); renderMetricsMatrix(); renderCockpitChart(); renderLogbookHistory(); evaluateLocalAiAgent(selectedDay);
+    }
+
+    function setCalendarView(mode) {
+      calendarViewMode = mode;
+      const bRecent = $('btn-cal-recent'); if (bRecent) { bRecent.style.borderColor = mode === 'recent' ? 'var(--cyan-neon)' : 'var(--border-subtle)'; bRecent.style.color = mode === 'recent' ? 'var(--cyan-neon)' : 'var(--text-muted)'; }
+      const bAll = $('btn-cal-all'); if (bAll) { bAll.style.borderColor = mode === 'all' ? 'var(--cyan-neon)' : 'var(--border-subtle)'; bAll.style.color = mode === 'all' ? 'var(--cyan-neon)' : 'var(--text-muted)'; }
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const box = $('calendar-grid-box'); if (!box) return; box.innerHTML = ''; if (!bioStore || !bioStore.days) return;
+      const allDays = Object.keys(bioStore.days).map(Number).sort((a,b)=>a-b);
+      let nominalCount = 0, advisoryCount = 0, hazardCount = 0;
+      allDays.forEach(d => { const st = bioStore.days[d].status; if (st === 'hazard') hazardCount++; else if (st === 'advisory') advisoryCount++; else nominalCount++; });
+      setText('calendar-summary-stat', `${allDays.length} Days // ${nominalCount} Normal, ${advisoryCount} Warning, ${hazardCount} Alert`);
+      const displayDays = (calendarViewMode === 'recent') ? allDays.slice(-28) : allDays;
+      displayDays.forEach(day => {
+        const dayData = bioStore.days[day]; const isCurrent = (day === selectedDay); const btn = document.createElement('div');
+        let dotClass = "dot-empty"; if (dayData) { if (dayData.status === 'hazard') dotClass = "dot-critical"; else if (dayData.status === 'advisory') dotClass = "dot-advisory"; else dotClass = "dot-nominal"; }
+        btn.className = `day-btn ${isCurrent ? 'active' : ''}`; btn.onclick = () => { selectedDay = day; renderEverything(); };
+        btn.innerHTML = `<span style="font-size: 0.6rem; color: var(--text-dim);">DAY</span><strong style="font-size: 0.88rem; color: ${isCurrent ? '#fff' : 'var(--text-white)'}; margin: 0.1rem 0;">${day}</strong><span class="dot-status ${dotClass}"></span>`;
+        box.appendChild(btn);
+      });
+    }
+
+    function renderMetricsMatrix() {
+      const box = $('metrics-matrix-box'); if (!box) return; box.innerHTML = '';
+      const d = bioStore.days[selectedDay] || createDefaultDay(selectedDay);
+
+      const items = [
+        { label: "Neck Vein Area", val: `${d.ijv_csa} mm²`, ref: "45.0 mm²", delta: `+${((d.ijv_csa - 45) / 45 * 100).toFixed(0)}%`, warn: d.ijv_csa > 68 },
+        { label: "Eye Pressure", val: `${d.onsd} mm`, ref: "4.80 mm", delta: `+${(d.onsd - 4.8).toFixed(2)} mm`, warn: d.onsd > 5.8 },
+        { label: "Daily Radiation", val: `${d.rad_daily} mSv`, ref: "0.01 mSv/d", delta: `${d.rad_daily} mSv`, warn: d.rad_daily > 5.0 },
+        { label: "Bone Loss (NTX)", val: `${d.ntx_resorption} BCE`, ref: "32.0 BCE", delta: `+${((d.ntx_resorption - 32) / 32 * 100).toFixed(0)}%`, warn: d.ntx_resorption > 65 },
+        { label: "Resting Heart Rate", val: `${d.resting_hr} bpm`, ref: "64.0 bpm", delta: `${d.resting_hr - 64} bpm`, warn: d.resting_hr > 75 },
+        { label: "Heart Stress (HRV)", val: `${d.hrv_rmssd} ms`, ref: "52.0 ms", delta: `${(d.hrv_rmssd - 52).toFixed(1)} ms`, warn: d.hrv_rmssd < 40 },
+        { label: "Sleep Duration", val: `${d.sleep_hours || 7.0} hrs`, ref: "8.0 hrs", delta: `${(d.sleep_hours || 7.0) - 8.0} hrs`, warn: (d.sleep_hours || 7.0) < 6.0 },
+        { label: "Water Intake", val: `${d.water_liters || 2.5} L`, ref: "2.6 L", delta: `${((d.water_liters || 2.5) - 2.6).toFixed(1)} L`, warn: (d.water_liters || 2.5) < 2.2 }
+      ];
+
+      items.forEach(item => {
+        const div = document.createElement('div'); div.className = "metric-card";
+        div.innerHTML = `<div style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase;">${item.label}</div><div style="font-size: 1.25rem; font-weight: 700; color: ${item.warn ? 'var(--amber-warn)' : '#fff'}; margin: 0.25rem 0;">${item.val}</div><div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 0.35rem; font-size: 0.68rem; color: var(--text-dim);"><span>Ref: ${item.ref}</span><strong style="color: ${item.warn ? 'var(--amber-warn)' : 'var(--green-ok)'};">${item.delta}</strong></div>`;
+        box.appendChild(div);
+      });
+    }
+
+    function createDefaultDay(dayNumber) { return { status: "nominal", ijv_csa: 58.0, lv_mass_delta: -3.5, onsd: 5.2, rnfl_thickness: 102, rad_daily: 1.40, rad_cumulative: 250.0 + (dayNumber * 1.4), ntx_resorption: 55.0, ared_peak_force: 2.8, ebv_copies: 50, cortisol: 13.0, resting_hr: 56, hrv_rmssd: 66.0, sleep_hours: 7.5, water_liters: 2.6 }; }
+
+    function switchDomain(domain) {
+      currentDomain = domain; document.querySelectorAll('.graph-tab-bar .graph-tab').forEach(b => b.classList.remove('active'));
+      const btn = $(`tab-${domain}`); if (btn) btn.classList.add('active'); renderCockpitChart();
+    }
+
+    function renderCockpitChart() {
+      if (!bioStore) { drawEmptyChart(); return; }
+      const canvas = $('cockpitChartCanvas'); if (!canvas) return; const ctx = canvas.getContext('2d');
+      const rect = canvas.parentElement.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr; canvas.height = rect.height * dpr; ctx.scale(dpr, dpr);
+
+      const W = rect.width; const H = rect.height;
+      const allSortedDays = Object.keys(bioStore.days).map(Number).sort((a,b)=>a-b); const sortedDays = allSortedDays.slice(-10);
+      setText('chart-window-tag', `LAST 10 DAYS (Day ${sortedDays[0]} - ${sortedDays[sortedDays.length-1]})`);
+
+      let p1 = [], p2 = [], l1 = "", l2 = "", threshold = 0;
+      if (currentDomain === 'cardio') {
+        setText('graph-main-title', "Fluid Shift: Head & Neck Veins"); setText('graph-sub-title', "Neck vein size vs heart volume change. Fluid shifts upward in zero-G.");
+        l1 = "Neck Vein (mm²)"; l2 = "Heart Size Change (%)"; p1 = sortedDays.map(d => bioStore.days[d].ijv_csa); p2 = sortedDays.map(d => Math.abs(bioStore.days[d].lv_mass_delta)); threshold = 68.0;
+      } else if (currentDomain === 'sans') {
+        setText('graph-main-title', "Eye Pressure (SANS)"); setText('graph-sub-title', "Eye sheath size vs retinal swelling. Fluid presses behind eyes.");
+        l1 = "Eye Sheath (mm)"; l2 = "Retina Swelling"; p1 = sortedDays.map(d => bioStore.days[d].onsd); p2 = sortedDays.map(d => bioStore.days[d].rnfl_thickness / 20); threshold = 5.80;
+      } else if (currentDomain === 'radiation') {
+        setText('graph-main-title', "Radiation Dose"); setText('graph-sub-title', "Daily dose vs solar flare strength.");
+        l1 = "Daily Radiation (mSv)"; l2 = "Flare Index"; p1 = sortedDays.map(d => bioStore.days[d].rad_daily); p2 = sortedDays.map(d => bioStore.days[d].rad_daily * 1.8); threshold = 5.0;
+      } else if (currentDomain === 'bone') {
+        setText('graph-main-title', "Bone Calcium Loss"); setText('graph-sub-title', "Bone calcium dissolved vs squat resistance.");
+        l1 = "Calcium Loss (NTX)"; l2 = "Squat Force"; p1 = sortedDays.map(d => bioStore.days[d].ntx_resorption); p2 = sortedDays.map(d => bioStore.days[d].ared_peak_force * 20); threshold = 65.0;
+      } else {
+        setText('graph-main-title', "Immune & Stress Level"); setText('graph-sub-title', "Virus marker count vs stress hormone.");
+        l1 = "Dormant Virus Count"; l2 = "Stress Hormone"; p1 = sortedDays.map(d => bioStore.days[d].ebv_copies / 20); p2 = sortedDays.map(d => bioStore.days[d].cortisol); threshold = 40.0;
+      }
+
+      setText('leg-1', l1); setText('leg-2', l2);
+      ctx.clearRect(0, 0, W, H);
+
+      const padL = 48, padR = 26, padT = 22, padB = 32; const cW = W - padL - padR; const cH = H - padT - padB;
+      const maxVal = Math.max(...p1, ...p2, threshold * 1.15, 10); const minVal = 0;
+
+      ctx.strokeStyle = "rgba(45, 75, 115, 0.35)"; ctx.lineWidth = 1; ctx.font = "10px ui-monospace, monospace"; ctx.fillStyle = "#64748b";
+      for (let i = 0; i <= 4; i++) {
+        const val = minVal + (maxVal - minVal) * (i / 4); const y = padT + cH - (cH * (i / 4));
+        ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke(); ctx.fillText(val.toFixed(1), 6, y + 3);
+      }
+
+      const threshY = padT + cH - (cH * ((threshold - minVal) / (maxVal - minVal)));
+      ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(padL, threshY); ctx.lineTo(W - padR, threshY); ctx.stroke(); ctx.restore();
+
+      const pts1 = p1.map((v, i) => ({ x: padL + (cW / (p1.length - 1 || 1)) * i, y: padT + cH - (cH * ((v - minVal) / (maxVal - minVal))), val: v, day: sortedDays[i] }));
+      const pts2 = p2.map((v, i) => ({ x: padL + (cW / (p2.length - 1 || 1)) * i, y: padT + cH - (cH * ((v - minVal) / (maxVal - minVal))) }));
+
+      if (pts1.length > 0) {
+        ctx.beginPath(); ctx.moveTo(pts1[0].x, padT + cH); pts1.forEach(pt => ctx.lineTo(pt.x, pt.y)); ctx.lineTo(pts1[pts1.length - 1].x, padT + cH);
+        ctx.fillStyle = "rgba(0, 240, 255, 0.08)"; ctx.fill();
+      }
+
+      ctx.save(); ctx.setLineDash([4, 3]); ctx.strokeStyle = "#f59e0b"; ctx.lineWidth = 2; ctx.beginPath(); pts2.forEach((pt, i) => { if (i === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y); }); ctx.stroke(); ctx.restore();
+
+      ctx.strokeStyle = "#00f0ff"; ctx.lineWidth = 2.5; ctx.beginPath(); pts1.forEach((pt, i) => { if (i === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y); }); ctx.stroke();
+
+      pts1.forEach(pt => {
+        const isCurrent = (pt.day === selectedDay); ctx.beginPath(); ctx.arc(pt.x, pt.y, isCurrent ? 6 : 4, 0, Math.PI * 2);
+        ctx.fillStyle = isCurrent ? "#fff" : "#00f0ff"; ctx.fill(); ctx.strokeStyle = isCurrent ? "#00f0ff" : "#02050b"; ctx.lineWidth = 3; ctx.stroke();
+        ctx.fillStyle = isCurrent ? "#00f0ff" : "#64748b"; ctx.font = isCurrent ? "bold 11px ui-monospace, monospace" : "10px ui-monospace, monospace"; ctx.fillText(`Day ${pt.day}`, pt.x - 16, padT + cH + 16);
+      });
+    }
+
+    function drawEmptyChart() {
+      const canvas = $('cockpitChartCanvas'); if (!canvas) return; const ctx = canvas.getContext('2d'); const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width; canvas.height = rect.height; ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.strokeStyle = "rgba(45, 75, 115, 0.3)";
+      for (let x = 40; x < canvas.width; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+      for (let y = 30; y < canvas.height; y += 30) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+    }
+
+    let model3d = { canvas: null, ctx: null, rotX: 0.1, rotY: 0.3, velX: 0, velY: 0, isDragging: false, lastX: 0, lastY: 0, autoSpin: true, selectedTarget: 'sans', nodes: [], limbs: [], hotspots: [] };
+
+    function setupDetailed3DModel() {
+      model3d.canvas = $('canvas3D'); if (!model3d.canvas) return; model3d.ctx = model3d.canvas.getContext('2d');
+      model3d.nodes = [{id:'c_apex',x:0,y:-135,z:0},{id:'c_f_hi',x:0,y:-125,z:15},{id:'c_b_hi',x:0,y:-125,z:-15},{id:'c_l_hi',x:-14,y:-125,z:0},{id:'c_r_hi',x:14,y:-125,z:0},{id:'c_front',x:0,y:-110,z:18},{id:'c_back',x:0,y:-110,z:-18},{id:'c_left',x:-18,y:-110,z:0},{id:'c_right',x:18,y:-110,z:0},{id:'c_chin',x:0,y:-90,z:12},{id:'c_jaw_l',x:-13,y:-92,z:-5},{id:'c_jaw_r',x:13,y:-92,z:-5},{id:'c_c1',x:0,y:-82,z:0},{id:'c_c7',x:0,y:-72,z:-2},{id:'clav_l',x:-38,y:-68,z:2},{id:'clav_r',x:38,y:-68,z:2},{id:'sh_l',x:-48,y:-64,z:0},{id:'sh_r',x:48,y:-64,z:0},{id:'t1_s',x:0,y:-58,z:14},{id:'t1_b',x:0,y:-58,z:-10},{id:'t1_l',x:-26,y:-58,z:2},{id:'t1_r',x:26,y:-58,z:2},{id:'t6_s',x:0,y:-38,z:17},{id:'t6_b',x:0,y:-38,z:-9},{id:'t6_l',x:-33,y:-38,z:4},{id:'t6_r',x:33,y:-38,z:4},{id:'t10_s',x:0,y:-18,z:14},{id:'t10_b',x:0,y:-18,z:-7},{id:'t10_l',x:-30,y:-18,z:3},{id:'t10_r',x:30,y:-18,z:3},{id:'l2_s',x:0,y:4,z:10},{id:'l2_b',x:0,y:4,z:-6},{id:'l5_b',x:0,y:22,z:-4},{id:'pelv_c',x:0,y:36,z:6},{id:'crest_l',x:-28,y:26,z:0},{id:'crest_r',x:28,y:26,z:0},{id:'hip_l',x:-26,y:42,z:1},{id:'hip_r',x:26,y:42,z:1},{id:'elb_l',x:-54,y:-14,z:4},{id:'elb_r',x:54,y:-14,z:4},{id:'wri_l',x:-58,y:34,z:8},{id:'wri_r',x:58,y:34,z:8},{id:'hand_l',x:-60,y:48,z:10},{id:'hand_r',x:60,y:48,z:10},{id:'knee_l',x:-25,y:98,z:4},{id:'knee_r',x:25,y:98,z:4},{id:'ank_l',x:-22,y:154,z:-2},{id:'ank_r',x:22,y:154,z:-2},{id:'heel_l',x:-22,y:158,z:-10},{id:'heel_r',x:22,y:158,z:-10},{id:'toe_l',x:-22,y:160,z:20},{id:'toe_r',x:22,y:160,z:20}];
+      model3d.limbs = [['c_apex','c_f_hi'],['c_apex','c_b_hi'],['c_apex','c_l_hi'],['c_apex','c_r_hi'],['c_f_hi','c_l_hi'],['c_l_hi','c_b_hi'],['c_b_hi','c_r_hi'],['c_r_hi','c_f_hi'],['c_f_hi','c_front'],['c_b_hi','c_back'],['c_l_hi','c_left'],['c_r_hi','c_right'],['c_front','c_left'],['c_left','c_back'],['c_back','c_right'],['c_right','c_front'],['c_front','c_chin'],['c_chin','c_jaw_l'],['c_chin','c_jaw_r'],['c_jaw_l','c_c1'],['c_jaw_r','c_c1'],['c_c1','c_c7'],['c_c7','clav_l'],['c_c7','clav_r'],['clav_l','sh_l'],['clav_r','sh_r'],['c_c7','t1_b'],['t1_b','t6_b'],['t6_b','t10_b'],['t10_b','l2_b'],['l2_b','l5_b'],['t1_s','t1_l'],['t1_l','t1_b'],['t1_b','t1_r'],['t1_r','t1_s'],['t6_s','t6_l'],['t6_l','t6_b'],['t6_b','t6_r'],['t6_r','t6_s'],['t10_s','t10_l'],['t10_l','t10_b'],['t10_b','t10_r'],['t10_r','t10_s'],['t1_s','t6_s'],['t6_s','t10_s'],['t10_s','l2_s'],['l2_s','pelv_c'],['l5_b','crest_l'],['l5_b','crest_r'],['crest_l','hip_l'],['crest_r','hip_r'],['hip_l','pelv_c'],['hip_r','pelv_c'],['sh_l','elb_l'],['elb_l','wri_l'],['wri_l','hand_l'],['sh_r','elb_r'],['elb_r','wri_r'],['wri_r','hand_r'],['hip_l','knee_l'],['knee_l','ank_l'],['ank_l','heel_l'],['ank_l','toe_l'],['hip_r','knee_r'],['knee_r','ank_r'],['ank_r','heel_r'],['ank_r','toe_r']];
+      model3d.hotspots = [{ id: 'sans', name: "Eyes", x: 0, y: -110, z: 18 },{ id: 'ijv', name: "Neck", x: 12, y: -78, z: 4 },{ id: 'heart', name: "Heart", x: 6, y: -38, z: 8 },{ id: 'spine', name: "Spine", x: 0, y: 6, z: -5 },{ id: 'bone', name: "Bones", x: -22, y: 156, z: -6 }];
+
+      model3d.canvas.addEventListener('mousedown', (e) => { e.stopPropagation(); model3d.isDragging = true; model3d.autoSpin = false; setText('autospin-btn', "Auto-Spin: OFF"); model3d.lastX = e.clientX; model3d.lastY = e.clientY; model3d.velX = 0; model3d.velY = 0; });
+      window.addEventListener('mousemove', (e) => { if (!model3d.isDragging) return; const dx = e.clientX - model3d.lastX; const dy = e.clientY - model3d.lastY; model3d.velY = dx * 0.007; model3d.velX = dy * 0.007; model3d.rotY += model3d.velY; model3d.rotX = Math.max(-0.6, Math.min(0.6, model3d.rotX + model3d.velX)); model3d.lastX = e.clientX; model3d.lastY = e.clientY; });
+      window.addEventListener('mouseup', () => { model3d.isDragging = false; });
+      model3d.canvas.addEventListener('touchstart', (e) => { e.stopPropagation(); if (e.touches.length === 1) { model3d.isDragging = true; model3d.autoSpin = false; model3d.lastX = e.touches[0].clientX; model3d.lastY = e.touches[0].clientY; model3d.velX = 0; model3d.velY = 0; } }, { passive: true });
+      window.addEventListener('touchmove', (e) => { if (!model3d.isDragging || e.touches.length === 0) return; const dx = e.touches[0].clientX - model3d.lastX; const dy = e.touches[0].clientY - model3d.lastY; model3d.velY = dx * 0.009; model3d.velX = dy * 0.009; model3d.rotY += model3d.velY; model3d.rotX = Math.max(-0.6, Math.min(0.6, model3d.rotX + model3d.velX)); model3d.lastX = e.touches[0].clientX; model3d.lastY = e.touches[0].clientY; }, { passive: true });
+      window.addEventListener('touchend', () => { model3d.isDragging = false; });
+
+      requestAnimationFrame(run3DLoop);
+    }
+
+    function hasActiveBodyIssue(hotspotId) {
+      if (!bioStore || !bioStore.days || !bioStore.days[selectedDay]) return false;
+      const d = bioStore.days[selectedDay];
+      if (hotspotId === 'sans') return (d.onsd > 5.8) || (d.vision && d.vision !== 'clear') || (d.head_fullness && d.head_fullness >= 6);
+      if (hotspotId === 'ijv') return (d.ijv_csa > 68.0);
+      if (hotspotId === 'heart') return (d.resting_hr > 75) || (d.hrv_rmssd < 45) || (d.status === 'hazard');
+      if (hotspotId === 'bone') return (d.ntx_resorption > 65.0);
+      if (hotspotId === 'spine') return (d.fatigue && d.fatigue >= 8);
+      return false;
+    }
+
+    function run3DLoop() {
+      const canvas = model3d.canvas; if (!canvas) return; const ctx = model3d.ctx;
+      const rect = canvas.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1;
+      if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) { canvas.width = rect.width * dpr; canvas.height = rect.height * dpr; }
+      ctx.save(); ctx.scale(dpr, dpr);
+
+      const W = rect.width; const H = rect.height; ctx.clearRect(0, 0, W, H);
+
+      if (model3d.autoSpin) { model3d.rotY += 0.006; }
+      else if (!model3d.isDragging) { model3d.rotY += model3d.velY; model3d.rotX = Math.max(-0.6, Math.min(0.6, model3d.rotX + model3d.velX)); model3d.velY *= 0.92; model3d.velX *= 0.92; }
+
+      const degY = Math.round(((model3d.rotY * 180 / Math.PI) % 360 + 360) % 360); setText('rot-angle-label', `ANGLE: ${degY}°`);
+
+      const cx = W / 2; const cy = H / 2 + 10; const fov = 340;
+      function project(n) {
+        const cosY = Math.cos(model3d.rotY), sinY = Math.sin(model3d.rotY);
+        const x1 = n.x * cosY + n.z * sinY; const z1 = -n.x * sinY + n.z * cosY;
+        const cosX = Math.cos(model3d.rotX), sinX = Math.sin(model3d.rotX);
+        const y1 = n.y * cosX + z1 * sinX; const z2 = -n.y * sinX + z1 * cosX;
+        const scale = fov / (fov - z2); return { x: cx + x1 * scale, y: cy + y1 * scale, z: z2, scale: scale };
+      }
+
+      const pNodes = {}; model3d.nodes.forEach(n => { pNodes[n.id] = project(n); });
+
+      ctx.lineWidth = 1.8;
+      model3d.limbs.forEach(([id1, id2]) => {
+        const p1 = pNodes[id1]; const p2 = pNodes[id2]; if (!p1 || !p2) return;
+        const avgZ = (p1.z + p2.z) / 2; const alpha = Math.max(0.18, Math.min(0.85, 0.55 + avgZ / 240));
+        ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`; ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+      });
+
+      Object.values(pNodes).forEach(p => {
+        const alpha = Math.max(0.2, Math.min(0.85, 0.55 + p.z / 240));
+        ctx.fillStyle = `rgba(226, 232, 240, ${alpha})`; ctx.beginPath(); ctx.arc(p.x, p.y, 2 * p.scale, 0, Math.PI * 2); ctx.fill();
+      });
+
+      const heartProj = project({ x: 4, y: -38, z: 6 });
+      ctx.save(); ctx.fillStyle = "rgba(0, 240, 255, 0.35)"; ctx.beginPath(); ctx.arc(heartProj.x, heartProj.y, Math.max(2, 4.5 * heartProj.scale), 0, Math.PI * 2); ctx.fill(); ctx.restore();
+
+      const time = Date.now() * 0.003;
+      model3d.hotspots.forEach(hs => {
+        const p = project(hs); const isSelected = (hs.id === model3d.selectedTarget); const hasIssue = hasActiveBodyIssue(hs.id);
+        ctx.save();
+        if (hasIssue) {
+          const pulse = Math.sin(time * 3.5) * 3;
+          const color = (bioStore && bioStore.days[selectedDay] && bioStore.days[selectedDay].status === 'hazard') ? '#ef4444' : '#f59e0b';
+          ctx.strokeStyle = color; ctx.lineWidth = isSelected ? 2.5 : 1.8;
+          ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(3, (isSelected ? 13 : 9) * p.scale + pulse), 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(2, (isSelected ? 4.5 : 3) * p.scale), 0, Math.PI * 2); ctx.fill();
+        } else {
+          const color = isSelected ? 'rgba(0, 240, 255, 0.9)' : 'rgba(0, 240, 255, 0.35)';
+          ctx.strokeStyle = color; ctx.lineWidth = isSelected ? 2.0 : 1.2;
+          ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(2, (isSelected ? 10 : 6) * p.scale), 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1.5, (isSelected ? 3.5 : 2) * p.scale), 0, Math.PI * 2); ctx.fill();
+        }
+        if (isSelected) {
+          ctx.font = "bold 10px ui-monospace, monospace"; ctx.fillStyle = hasIssue ? '#f59e0b' : '#00f0ff';
+          ctx.fillText(`▲ ${hs.name}`, p.x + 14, p.y + 3);
+        }
+        ctx.restore();
+      });
+
+      ctx.restore(); requestAnimationFrame(run3DLoop);
+    }
+
+    function toggleAutoRotation() { model3d.autoSpin = !model3d.autoSpin; setText('autospin-btn', `Auto-Spin: ${model3d.autoSpin ? 'ON' : 'OFF'}`); }
+    function reset3DOrientation() { model3d.rotX = 0.1; model3d.rotY = 0.3; model3d.velX = 0; model3d.velY = 0; model3d.autoSpin = true; setText('autospin-btn', "Auto-Spin: ON"); }
+
+    function inspectBodyPart(targetId) {
+      model3d.selectedTarget = targetId; document.querySelectorAll('.scanner-layout .graph-tab').forEach(b => b.classList.remove('active'));
+      const activeBtn = $(`btn-part-${targetId}`); if (activeBtn) activeBtn.classList.add('active');
+      const pill = $('hotspot-risk-pill'); const hasIssue = hasActiveBodyIssue(targetId);
+      if (pill) { pill.className = hasIssue ? "status-badge warn" : "status-badge ok"; pill.innerText = hasIssue ? "WARNING" : "NORMAL"; }
+
+      const nameEl = $('hotspot-name');
+      if (targetId === 'sans') {
+        setText('hotspot-name', "Eyes (Fluid Pressure)"); if (nameEl) nameEl.style.color = hasIssue ? "var(--amber-warn)" : "var(--cyan-neon)";
+        setText('hotspot-explanation', "Microgravity shifts fluids headward, increasing optic nerve pressure and altering vision.");
+        document.querySelector('#hotspot-explanation + div').innerHTML = '<span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span> Rx: 45-min Lower Body Negative Pressure (LBNP).';
+      } else if (targetId === 'ijv') {
+        setText('hotspot-name', "Neck Vein Swelling"); if (nameEl) nameEl.style.color = hasIssue ? "var(--red-alert)" : "var(--cyan-neon)";
+        setText('hotspot-explanation', "Fluids pooling in the upper body cause neck vein distension and stagnant blood flow.");
+        document.querySelector('#hotspot-explanation + div').innerHTML = '<span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span> Use LBNP device and Braslet thigh cuffs.';
+      } else if (targetId === 'heart') {
+        setText('hotspot-name', "Heart Muscle Tone"); if (nameEl) nameEl.style.color = hasIssue ? "var(--red-alert)" : "var(--cyan-neon)";
+        setText('hotspot-explanation', "Heart muscle atrophies in zero-G due to reduced workload. Requires daily ARED/CEVIS exercise.");
+        document.querySelector('#hotspot-explanation + div').innerHTML = '<span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span> 2.5 hours combined cardio and resistive workout.';
+      } else if (targetId === 'bone') {
+        setText('hotspot-name', "Bone Thinning"); if (nameEl) nameEl.style.color = hasIssue ? "var(--amber-warn)" : "var(--cyan-neon)";
+        setText('hotspot-explanation', "Bones lose ~1% mass per month without gravity. ARED heavy lifting stimulates bone growth.");
+        document.querySelector('#hotspot-explanation + div').innerHTML = '<span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span> Heavy squat and deadlift protocols.';
+      } else if (targetId === 'spine') {
+        setText('hotspot-name', "Spine Lengthening"); if (nameEl) nameEl.style.color = hasIssue ? "var(--amber-warn)" : "var(--cyan-neon)";
+        setText('hotspot-explanation', "Spinal discs expand in zero-G, lengthening the spine by up to 5cm and causing back pain.");
+        document.querySelector('#hotspot-explanation + div').innerHTML = '<span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span> Fetal tuck stretches and core strengthening.';
+      }
+    }
+
+    /* ----------------------------------------------------------------------
+       PRESETS & MODALS
+       ---------------------------------------------------------------------- */
+    const TEST_PRESETS = {
+      solar_storm: { metadata: { mission: "EXPEDITION 73", subject: "CDR. VANCE, ALEXANDER" }, days: { 250: { status: "hazard", ijv_csa: 78.4, lv_mass_delta: -8.1, onsd: 6.35, rnfl_thickness: 132, rad_daily: 16.4, rad_cumulative: 310.2, ntx_resorption: 88.0, ared_peak_force: 1.1, ebv_copies: 2100, cortisol: 31.0, resting_hr: 78, hrv_rmssd: 31.5, sleep_hours: 4.0, water_liters: 2.0, alertTitle: "Solar Storm Event", alertDetail: "High radiation detected (16.4 mSv)." } } },
+      sans_spike: { metadata: { mission: "EXPEDITION 73", subject: "CDR. VANCE, ALEXANDER" }, days: { 251: { status: "advisory", ijv_csa: 75.1, lv_mass_delta: -6.9, onsd: 6.12, rnfl_thickness: 121, rad_daily: 2.2, rad_cumulative: 312.4, ntx_resorption: 74.0, ared_peak_force: 2.6, ebv_copies: 520, cortisol: 19.5, resting_hr: 63, hrv_rmssd: 59.0, sleep_hours: 6.0, water_liters: 2.4, alertTitle: "Head Fluid & Eye Strain", alertDetail: "Neck veins swollen. Eye pressure elevated." } } },
+      nominal_recovery: { metadata: { mission: "EXPEDITION 73", subject: "CDR. VANCE, ALEXANDER" }, days: { 252: { status: "nominal", ijv_csa: 59.8, lv_mass_delta: -3.8, onsd: 5.25, rnfl_thickness: 103, rad_daily: 1.35, rad_cumulative: 313.75, ntx_resorption: 54.0, ared_peak_force: 2.95, ebv_copies: 80, cortisol: 13.5, resting_hr: 55, hrv_rmssd: 71.0, sleep_hours: 7.5, water_liters: 2.8, alertTitle: "Normal Flight State", alertDetail: "All readings are within safe bounds." } } }
+    };
+    function loadTestPreset(presetKey) { const data = TEST_PRESETS[presetKey]; if (data) setVal('paste-input', JSON.stringify(data, null, 2)); }
+
+    function openModal(id) { const el = $(id); if (el) el.classList.add('active'); }
+    function closeModal(id) { const el = $(id); if (el) el.classList.remove('active'); }
+    function commitPastedPayload() {
+      const raw = $('paste-input') ? $('paste-input').value : ""; if (!raw.trim()) { alert("Please paste valid JSON."); return; }
+      try {
+        const parsed = JSON.parse(raw); if (!bioStore) bioStore = parsed; else bioStore.days = { ...bioStore.days, ...parsed.days };
+        localStorage.setItem(CACHE_KEY, JSON.stringify(bioStore)); $('clean-state-shield').style.display = "none"; $('cache-pill').className = "status-badge ok";
+        const keys = Object.keys(bioStore.days).map(Number).sort((a,b)=>a-b);
+        selectedDay = keys[keys.length - 1]; closeModal('paste-modal'); updateNextLogDayInput(); renderEverything();
+        showIngestBanner(`Day ${selectedDay} saved.`);
+      } catch (err) { alert("JSON Error: " + err.message); }
+    }
+    function exportDataDossier() {
+      if (!bioStore) { alert("No data to export."); return; }
+      const a = document.createElement('a'); a.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bioStore, null, 2)));
+      a.setAttribute("download", `AEGIS_BIO_LOG_DAY_${selectedDay || 'ALL'}.json`); document.body.appendChild(a); a.click(); a.remove();
+      showIngestBanner("File downloaded.");
+    }
+    function handleFileSelect(e) { if (e.target.files.length > 0) parseHealthFile(e.target.files[0]); }
+    function parseHealthFile(file) {
+      const reader = new FileReader(); reader.onload = (event) => {
+        try {
+          bioStore = JSON.parse(event.target.result); localStorage.setItem(CACHE_KEY, JSON.stringify(bioStore));
+          $('clean-state-shield').style.display = "none"; $('cache-pill').className = "status-badge ok";
+          const keys = Object.keys(bioStore.days).map(Number).sort((a,b)=>a-b);
+          selectedDay = keys[keys.length - 1]; updateNextLogDayInput(); renderEverything();
+          showIngestBanner(`File loaded.`);
+        } catch (err) { alert("File Error: " + err.message); }
+      }; reader.readAsText(file);
+    }
+    function showIngestBanner(msg) { setText('log-status-msg', `✓ ${msg}`); setTimeout(() => { setText('log-status-msg', ''); }, 3000); }
+
+    const cCanvas = $('cockpitChartCanvas');
+    if (cCanvas) {
+      cCanvas.addEventListener('mousemove', (e) => {
+        if (!bioStore) return;
+        const rect = cCanvas.getBoundingClientRect(); const x = e.clientX - rect.left;
+        const padL = 48, padR = 26; const cW = rect.width - padL - padR;
+        const allSortedDays = Object.keys(bioStore.days).map(Number).sort((a,b)=>a-b); const sortedDays = allSortedDays.slice(-10);
+        const index = Math.round(Math.max(0, Math.min(1, (x - padL) / cW)) * (sortedDays.length - 1));
+        const hoveredDay = sortedDays[index];
+        if (hoveredDay) {
+          const d = bioStore.days[hoveredDay];
+          setText('chart-hover-tip', `Day ${hoveredDay}: Neck Vein=${d.ijv_csa}mm² | Eye Pressure=${d.onsd}mm | Rad=${d.rad_daily}mSv`);
+        }
+      });
+    }
+
+    window.addEventListener('resize', () => { if (bioStore) renderCockpitChart(); else drawEmptyChart(); });
+  </script>
+</body>
+</html>
