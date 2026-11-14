@@ -1672,13 +1672,141 @@
       for (let y = 30; y < rect.height; y += 30) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(rect.width, y); ctx.stroke(); }
     }
 
-    let model3d = { canvas: null, ctx: null, rotX: 0.1, rotY: 0.3, velX: 0, velY: 0, isDragging: false, lastX: 0, lastY: 0, autoSpin: true, selectedTarget: 'sans', nodes: [], limbs: [], hotspots: [], visible: false, lastLabelTs: 0 };
+    /* ------------------------------------------------------------------
+       HUMANOID WIREFRAME MESH (page 06)
+       A surface grid rather than a stick figure: head+torso+pelvis and
+       the feet are swept as elliptical cross-sections down a profile;
+       arms and legs are tubes swept along a path with an orthonormal
+       frame. Consecutive rings are stitched into quads, then drawn with
+       depth-graded alpha (bright front lines, faint back lines) so the
+       body reads as a volume — the classic cyan scan-wireframe look.
+       ------------------------------------------------------------------ */
+    const MESH_TORSO_PROFILE = [
+      [ -138, 0.6,  0.6], [ -133, 8.0,  9.0], [ -126, 12.5, 14.0], [ -118, 13.5, 15.5],
+      [ -110, 13.0, 15.0], [ -104, 12.0, 14.0], [ -97, 9.0, 10.5], [ -93, 6.5, 7.5],
+      [ -88, 6.0,  7.0], [ -84, 6.5,  7.5], [ -79, 12.0, 9.0], [ -74, 17.0, 10.5],
+      [ -68, 20.0, 11.5], [ -58, 21.5, 12.0], [ -48, 20.5, 11.5], [ -40, 19.0, 11.0],
+      [ -32, 17.0, 10.5], [ -24, 15.5, 9.5], [ -16, 15.0, 9.5], [ -8, 15.5, 10.0],
+      [   0, 17.0, 11.0], [  10, 18.0, 11.5], [  20, 17.5, 11.0], [  30, 15.5, 10.0],
+      [  37, 12.5, 9.0], [  42, 9.0, 7.5]
+    ]; /* [y, rx, rz] — crown of head down to pelvis */
+    const MESH_FOOT_PROFILE = [
+      [149, 4.6, 5.0, -1.0], [153, 4.8, 6.5, 1.5], [156, 4.4, 7.5, 3.5],
+      [158.5, 3.4, 6.5, 5.5], [160, 2.0, 4.5, 6.5]
+    ]; /* [y, rx, rz, cz] — ankle down to toe, extending forward in +z */
+    const MESH_ARM_PATH = [[17, -67, 0], [24, -52, 1], [31, -36, 1.5], [37, -20, 2],
+      [41, -6, 2.5], [45, 8, 3], [48, 22, 3.5], [50, 34, 4], [51, 44, 4]];
+    const MESH_ARM_R = [8.5, 7.2, 6.5, 5.8, 5.5, 5.2, 4.8, 4.4, 3.8];
+    const MESH_LEG_PATH = [[8.5, 26, 0], [9.5, 44, 0.5], [10, 64, 1], [10.5, 84, 1],
+      [10.5, 102, 0.5], [10.5, 120, -1.5], [10.2, 138, -1], [10, 150, -0.5]];
+    const MESH_LEG_R = [10, 9.5, 9, 8.2, 7.2, 7.6, 5.6, 4.8];
+
+    function meshProfileAt(keys, y) {
+      let a = keys[0], b = keys[0];
+      if (y > keys[0][0] && y < keys[keys.length - 1][0]) {
+        for (let i = 0; i < keys.length - 1; i++) {
+          if (y >= keys[i][0] && y <= keys[i + 1][0]) { a = keys[i]; b = keys[i + 1]; break; }
+        }
+      } else if (y >= keys[keys.length - 1][0]) {
+        a = b = keys[keys.length - 1];
+      }
+      const span = (b[0] - a[0]) || 1;
+      const t = Math.min(1, Math.max(0, (y - a[0]) / span));
+      const e = t * t * (3 - 2 * t); /* smoothstep keeps curvature organic */
+      const czA = a[3] || 0, czB = b[3] || 0;
+      return [a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e, czA + (czB - czA) * e];
+    }
+
+    function meshProfileRings(keys, step, segs) {
+      const y0 = keys[0][0], y1 = keys[keys.length - 1][0];
+      const n = Math.max(2, Math.round(Math.abs(y1 - y0) / step));
+      const rings = [];
+      for (let i = 0; i <= n; i++) {
+        const y = y0 + (y1 - y0) * (i / n);
+        const pr = meshProfileAt(keys, y);
+        const ring = [];
+        for (let j = 0; j < segs; j++) {
+          const th = (j / segs) * Math.PI * 2;
+          ring.push([pr[0] * Math.cos(th), y, pr[2] + pr[1] * Math.sin(th)]);
+        }
+        rings.push(ring);
+      }
+      return rings;
+    }
+
+    function meshTubeRings(path, radii, step, segs) {
+      const lens = []; let total = 0;
+      for (let i = 0; i < path.length - 1; i++) {
+        const a = path[i], b = path[i + 1];
+        const d = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+        lens.push(d); total += d;
+      }
+      const n = Math.max(2, Math.round(total / step));
+      const rings = [];
+      for (let k = 0; k <= n; k++) {
+        let t = (k / n) * total, si = 0;
+        while (si < lens.length - 1 && t > lens[si]) { t -= lens[si]; si++; }
+        const a = path[si], b = path[si + 1];
+        const f = lens[si] > 0 ? t / lens[si] : 0;
+        const px = a[0] + (b[0] - a[0]) * f, py = a[1] + (b[1] - a[1]) * f, pz = a[2] + (b[2] - a[2]) * f;
+        const r = radii[si] + (radii[si + 1] - radii[si]) * f;
+        let tx = b[0] - a[0], ty = b[1] - a[1], tz = b[2] - a[2];
+        const tl = Math.hypot(tx, ty, tz) || 1; tx /= tl; ty /= tl; tz /= tl;
+        /* frame from a fixed +Z reference: n1 = t×z, n2 = t×n1 (stable for
+           vertical-ish limbs — no degenerate cases along arms/legs) */
+        let n1x = ty, n1y = -tx, n1z = 0;
+        const n1l = Math.hypot(n1x, n1y, n1z) || 1; n1x /= n1l; n1y /= n1l; n1z /= n1l;
+        const n2x = ty * n1z - tz * n1y, n2y = tz * n1x - tx * n1z, n2z = tx * n1y - ty * n1x;
+        const ring = [];
+        for (let j = 0; j < segs; j++) {
+          const th = (j / segs) * Math.PI * 2;
+          const c = Math.cos(th) * r, s = Math.sin(th) * r;
+          ring.push([px + n1x * c + n2x * s, py + n1y * c + n2y * s, pz + n1z * c + n2z * s]);
+        }
+        rings.push(ring);
+      }
+      return rings;
+    }
+
+    function meshMirrorX(rings) {
+      return rings.map((ring) => ring.map((p) => [-p[0], p[1], p[2]]));
+    }
+
+    function buildHumanoidMesh() {
+      const groups = [];
+      groups.push(meshProfileRings(MESH_TORSO_PROFILE, 3.6, 26));
+      const arm = meshTubeRings(MESH_ARM_PATH, MESH_ARM_R, 5.5, 14);
+      groups.push(arm, meshMirrorX(arm));
+      const leg = meshTubeRings(MESH_LEG_PATH, MESH_LEG_R, 5.0, 16);
+      groups.push(leg, meshMirrorX(leg));
+      const foot = meshProfileRings(MESH_FOOT_PROFILE, 3.0, 10)
+        .map((ring) => ring.map((p) => [p[0] + 10, p[1], p[2]]));
+      groups.push(foot, meshMirrorX(foot));
+
+      const pts = []; const segs = [];
+      for (const rings of groups) {
+        const ringStarts = [];
+        for (const ring of rings) {
+          const start = pts.length / 3;
+          ringStarts.push(start);
+          for (const p of ring) pts.push(p[0], p[1], p[2]);
+          for (let j = 0; j < ring.length; j++) segs.push(start + j, start + ((j + 1) % ring.length));
+        }
+        for (let r = 0; r < rings.length - 1; r++) {
+          for (let j = 0; j < rings[r].length; j++) segs.push(ringStarts[r] + j, ringStarts[r + 1] + j);
+        }
+      }
+      return { points: new Float32Array(pts), segs: new Uint32Array(segs) };
+    }
+
+    let model3d = { canvas: null, ctx: null, rotX: 0.1, rotY: 0.3, velX: 0, velY: 0, isDragging: false, lastX: 0, lastY: 0, autoSpin: true, selectedTarget: 'sans', mesh: null, _proj: null, _buckets: null, hotspots: [], visible: false, lastLabelTs: 0 };
 
     function setupDetailed3DModel() {
       model3d.canvas = $('canvas3D'); if (!model3d.canvas) return; model3d.ctx = model3d.canvas.getContext('2d');
-      model3d.nodes = [{id:'c_apex',x:0,y:-135,z:0},{id:'c_f_hi',x:0,y:-125,z:15},{id:'c_b_hi',x:0,y:-125,z:-15},{id:'c_l_hi',x:-14,y:-125,z:0},{id:'c_r_hi',x:14,y:-125,z:0},{id:'c_front',x:0,y:-110,z:18},{id:'c_back',x:0,y:-110,z:-18},{id:'c_left',x:-18,y:-110,z:0},{id:'c_right',x:18,y:-110,z:0},{id:'c_chin',x:0,y:-90,z:12},{id:'c_jaw_l',x:-13,y:-92,z:-5},{id:'c_jaw_r',x:13,y:-92,z:-5},{id:'c_c1',x:0,y:-82,z:0},{id:'c_c7',x:0,y:-72,z:-2},{id:'clav_l',x:-38,y:-68,z:2},{id:'clav_r',x:38,y:-68,z:2},{id:'sh_l',x:-48,y:-64,z:0},{id:'sh_r',x:48,y:-64,z:0},{id:'t1_s',x:0,y:-58,z:14},{id:'t1_b',x:0,y:-58,z:-10},{id:'t1_l',x:-26,y:-58,z:2},{id:'t1_r',x:26,y:-58,z:2},{id:'t6_s',x:0,y:-38,z:17},{id:'t6_b',x:0,y:-38,z:-9},{id:'t6_l',x:-33,y:-38,z:4},{id:'t6_r',x:33,y:-38,z:4},{id:'t10_s',x:0,y:-18,z:14},{id:'t10_b',x:0,y:-18,z:-7},{id:'t10_l',x:-30,y:-18,z:3},{id:'t10_r',x:30,y:-18,z:3},{id:'l2_s',x:0,y:4,z:10},{id:'l2_b',x:0,y:4,z:-6},{id:'l5_b',x:0,y:22,z:-4},{id:'pelv_c',x:0,y:36,z:6},{id:'crest_l',x:-28,y:26,z:0},{id:'crest_r',x:28,y:26,z:0},{id:'hip_l',x:-26,y:42,z:1},{id:'hip_r',x:26,y:42,z:1},{id:'elb_l',x:-54,y:-14,z:4},{id:'elb_r',x:54,y:-14,z:4},{id:'wri_l',x:-58,y:34,z:8},{id:'wri_r',x:58,y:34,z:8},{id:'hand_l',x:-60,y:48,z:10},{id:'hand_r',x:60,y:48,z:10},{id:'knee_l',x:-25,y:98,z:4},{id:'knee_r',x:25,y:98,z:4},{id:'ank_l',x:-22,y:154,z:-2},{id:'ank_r',x:22,y:154,z:-2},{id:'heel_l',x:-22,y:158,z:-10},{id:'heel_r',x:22,y:158,z:-10},{id:'toe_l',x:-22,y:160,z:20},{id:'toe_r',x:22,y:160,z:20}];
-      model3d.limbs = [['c_apex','c_f_hi'],['c_apex','c_b_hi'],['c_apex','c_l_hi'],['c_apex','c_r_hi'],['c_f_hi','c_l_hi'],['c_l_hi','c_b_hi'],['c_b_hi','c_r_hi'],['c_r_hi','c_f_hi'],['c_f_hi','c_front'],['c_b_hi','c_back'],['c_l_hi','c_left'],['c_r_hi','c_right'],['c_front','c_left'],['c_left','c_back'],['c_back','c_right'],['c_right','c_front'],['c_front','c_chin'],['c_chin','c_jaw_l'],['c_chin','c_jaw_r'],['c_jaw_l','c_c1'],['c_jaw_r','c_c1'],['c_c1','c_c7'],['c_c7','clav_l'],['c_c7','clav_r'],['clav_l','sh_l'],['clav_r','sh_r'],['c_c7','t1_b'],['t1_b','t6_b'],['t6_b','t10_b'],['t10_b','l2_b'],['l2_b','l5_b'],['t1_s','t1_l'],['t1_l','t1_b'],['t1_b','t1_r'],['t1_r','t1_s'],['t6_s','t6_l'],['t6_l','t6_b'],['t6_b','t6_r'],['t6_r','t6_s'],['t10_s','t10_l'],['t10_l','t10_b'],['t10_b','t10_r'],['t10_r','t10_s'],['t1_s','t6_s'],['t6_s','t10_s'],['t10_s','l2_s'],['l2_s','pelv_c'],['l5_b','crest_l'],['l5_b','crest_r'],['crest_l','hip_l'],['crest_r','hip_r'],['hip_l','pelv_c'],['hip_r','pelv_c'],['sh_l','elb_l'],['elb_l','wri_l'],['wri_l','hand_l'],['sh_r','elb_r'],['elb_r','wri_r'],['wri_r','hand_r'],['hip_l','knee_l'],['knee_l','ank_l'],['ank_l','heel_l'],['ank_l','toe_l'],['hip_r','knee_r'],['knee_r','ank_r'],['ank_r','heel_r'],['ank_r','toe_r']];
-      model3d.hotspots = [{ id: 'sans', name: "Eyes", x: 0, y: -110, z: 18 },{ id: 'ijv', name: "Neck", x: 12, y: -78, z: 4 },{ id: 'heart', name: "Heart", x: 6, y: -38, z: 8 },{ id: 'spine', name: "Spine", x: 0, y: 6, z: -5 },{ id: 'bone', name: "Bones", x: -22, y: 156, z: -6 }];
+      model3d.mesh = buildHumanoidMesh();
+      model3d._buckets = Array.from({ length: 8 }, () => []);
+
+      model3d.hotspots = [{ id: 'sans', name: "Eyes", x: 0, y: -112, z: 15.5 },{ id: 'ijv', name: "Neck", x: 8, y: -81, z: 8 },{ id: 'heart', name: "Heart", x: 6, y: -40, z: 11 },{ id: 'spine', name: "Spine", x: 0, y: 2, z: -11.5 },{ id: 'bone', name: "Bones", x: -10.5, y: 102, z: 7.5 }];
 
       model3d.canvas.addEventListener('mousedown', (e) => { e.stopPropagation(); model3d.isDragging = true; model3d.autoSpin = false; setText('autospin-btn', "Auto-Spin: OFF"); model3d.lastX = e.clientX; model3d.lastY = e.clientY; model3d.velX = 0; model3d.velY = 0; });
       window.addEventListener('mousemove', (e) => { if (!model3d.isDragging) return; const dx = e.clientX - model3d.lastX; const dy = e.clientY - model3d.lastY; model3d.velY = dx * 0.007; model3d.velX = dy * 0.007; model3d.rotY += model3d.velY; model3d.rotX = Math.max(-0.6, Math.min(0.6, model3d.rotX + model3d.velX)); model3d.lastX = e.clientX; model3d.lastY = e.clientY; });
@@ -1728,27 +1856,57 @@
       }
 
       const cx = W / 2; const cy = H / 2 + 10; const fov = 340;
+      const cosY = Math.cos(model3d.rotY), sinY = Math.sin(model3d.rotY);
+      const cosX = Math.cos(model3d.rotX), sinX = Math.sin(model3d.rotX);
       function project(n) {
-        const cosY = Math.cos(model3d.rotY), sinY = Math.sin(model3d.rotY);
         const x1 = n.x * cosY + n.z * sinY; const z1 = -n.x * sinY + n.z * cosY;
-        const cosX = Math.cos(model3d.rotX), sinX = Math.sin(model3d.rotX);
         const y1 = n.y * cosX + z1 * sinX; const z2 = -n.y * sinX + z1 * cosX;
         const scale = fov / (fov - z2); return { x: cx + x1 * scale, y: cy + y1 * scale, z: z2, scale: scale };
       }
 
-      const pNodes = {}; model3d.nodes.forEach(n => { pNodes[n.id] = project(n); });
-
-      ctx.lineWidth = 1.8;
-      model3d.limbs.forEach(([id1, id2]) => {
-        const p1 = pNodes[id1]; const p2 = pNodes[id2]; if (!p1 || !p2) return;
-        const avgZ = (p1.z + p2.z) / 2; const alpha = Math.max(0.18, Math.min(0.85, 0.55 + avgZ / 240));
-        ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`; ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-      });
-
-      Object.values(pNodes).forEach(p => {
-        const alpha = Math.max(0.2, Math.min(0.85, 0.55 + p.z / 240));
-        ctx.fillStyle = `rgba(226, 232, 240, ${alpha})`; ctx.beginPath(); ctx.arc(p.x, p.y, 2 * p.scale, 0, Math.PI * 2); ctx.fill();
-      });
+      /* Humanoid mesh: project every vertex into one reusable Float32Array
+         (no per-frame allocations), then stroke quads grouped into 8 depth
+         buckets so each alpha costs a single path stroke. */
+      const mesh = model3d.mesh; const buckets = model3d._buckets;
+      if (mesh && buckets) {
+        const nPts = mesh.points.length / 3;
+        let proj = model3d._proj;
+        if (!proj || proj.length !== mesh.points.length) {
+          proj = model3d._proj = new Float32Array(mesh.points.length);
+        }
+        let zLo = Infinity, zHi = -Infinity;
+        for (let i = 0; i < nPts; i++) {
+          const o = i * 3;
+          const nx = mesh.points[o], ny = mesh.points[o + 1], nz = mesh.points[o + 2];
+          const x1 = nx * cosY + nz * sinY; const z1 = -nx * sinY + nz * cosY;
+          const y1 = ny * cosX + z1 * sinX; const z2 = -ny * sinX + z1 * cosX;
+          const sc = fov / (fov - z2);
+          proj[o] = cx + x1 * sc; proj[o + 1] = cy + y1 * sc; proj[o + 2] = z2;
+          if (z2 < zLo) zLo = z2;
+          if (z2 > zHi) zHi = z2;
+        }
+        const zSpan = (zHi - zLo) || 1;
+        for (let b = 0; b < buckets.length; b++) buckets[b].length = 0;
+        const segs = mesh.segs;
+        for (let s = 0; s < segs.length; s += 2) {
+          const ia = segs[s] * 3, ib = segs[s + 1] * 3;
+          let bi = (((proj[ia + 2] + proj[ib + 2]) * 0.5 - zLo) / zSpan * buckets.length) | 0;
+          if (bi < 0) bi = 0; else if (bi >= buckets.length) bi = buckets.length - 1;
+          buckets[bi].push(proj[ia], proj[ia + 1], proj[ib], proj[ib + 1]);
+        }
+        for (let b = 0; b < buckets.length; b++) {
+          const arr = buckets[b]; if (!arr.length) continue;
+          const depth = b / (buckets.length - 1);
+          ctx.strokeStyle = `rgba(64, 232, 255, ${(0.16 + depth * 0.72).toFixed(3)})`;
+          ctx.lineWidth = 1 + depth * 0.35;
+          ctx.beginPath();
+          for (let i = 0; i < arr.length; i += 4) {
+            ctx.moveTo(arr[i], arr[i + 1]);
+            ctx.lineTo(arr[i + 2], arr[i + 3]);
+          }
+          ctx.stroke();
+        }
+      }
 
       const heartProj = project({ x: 4, y: -38, z: 6 });
       ctx.save(); ctx.fillStyle = "rgba(0, 240, 255, 0.35)"; ctx.beginPath(); ctx.arc(heartProj.x, heartProj.y, Math.max(2, 4.5 * heartProj.scale), 0, Math.PI * 2); ctx.fill(); ctx.restore();
