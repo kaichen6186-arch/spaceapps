@@ -341,12 +341,6 @@
     .logbook-table tr:hover td { background: rgba(0, 240, 255, 0.05); }
     .streak-badge-card { background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(9, 18, 32, 0.95) 100%); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
 
-    /* Page 06: 3D Body */
-    .scanner-layout { display: grid; grid-template-columns: 1.45fr 1fr; gap: 1.5rem; flex: 1; min-height: 0; align-items: center; }
-    .canvas-3d-box { width: 100%; height: 440px; background: radial-gradient(circle at center, rgba(14, 26, 44, 0.8) 0%, rgba(2, 5, 11, 0.98) 75%); border: 1px solid var(--border-subtle); border-radius: 12px; position: relative; overflow: hidden; }
-    canvas#canvas3D { width: 100%; height: 100%; display: block; cursor: grab; }
-    canvas#canvas3D:active { cursor: grabbing; }
-
     /* Modals */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px); z-index: 200; display: none; align-items: center; justify-content: center; padding: 1.5rem; }
     .modal-backdrop.active { display: flex; }
@@ -447,8 +441,7 @@
       <button class="nav-tab-btn" onclick="jumpToPage(2)" id="step-2">03 VITALS</button>
       <button class="nav-tab-btn" onclick="jumpToPage(3)" id="step-3">04 CHECK-IN</button>
       <button class="nav-tab-btn" onclick="jumpToPage(4)" id="step-4">05 LOGBOOK</button>
-      <button class="nav-tab-btn" onclick="jumpToPage(5)" id="step-5">06 3D BODY</button>
-      <button class="nav-tab-btn" onclick="jumpToPage(6)" id="step-6">07 PROTOCOLS</button>
+      <button class="nav-tab-btn" onclick="jumpToPage(5)" id="step-5">06 PROTOCOLS</button>
     </nav>
 
     <div style="display: flex; align-items: center; gap: 1rem; font-family: var(--font-mono); font-size: 0.75rem;">
@@ -484,7 +477,7 @@
         
         <div class="page-start-strip">
           <div class="page-start-label">
-            <span class="page-start-pill">PAGE 01 / 07</span>
+            <span class="page-start-pill">PAGE 01 / 06</span>
             <span>OVERVIEW // VITALS & AI ASSISTANT</span>
           </div>
           <div style="display: flex; gap: 1rem; align-items: center; font-family: var(--font-mono);">
@@ -657,7 +650,7 @@
         
         <div class="page-start-strip">
           <div class="page-start-label">
-            <span class="page-start-pill">PAGE 02 / 07</span>
+            <span class="page-start-pill">PAGE 02 / 06</span>
             <span>CALENDAR // TIMELINE</span>
           </div>
           <div style="color: var(--text-dim);">INSPECTING: <strong id="cal-inspect-day-label" style="color: var(--cyan-neon);">DAY 249</strong></div>
@@ -702,7 +695,7 @@
         
         <div class="page-start-strip">
           <div class="page-start-label">
-            <span class="page-start-pill">PAGE 03 / 07</span>
+            <span class="page-start-pill">PAGE 03 / 06</span>
             <span>VITALS // VS EARTH NORMAL</span>
           </div>
           <div style="color: var(--text-dim);">DAY <strong id="vitals-day-label" style="color: var(--cyan-neon);">249</strong></div>
@@ -723,7 +716,7 @@
           </div>
 
           <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim); border-top: 1px solid var(--border-subtle); padding-top: 0.5rem; flex-shrink: 0;">
-            Reference ranges from published NASA/ISS crew health data — see sources on page 07.
+            Reference ranges from published NASA/ISS crew health data — see sources on page 06.
           </div>
         </div>
 
@@ -742,7 +735,7 @@
         
         <div class="page-start-strip">
           <div class="page-start-label">
-            <span class="page-start-pill">PAGE 04 / 07</span>
+            <span class="page-start-pill">PAGE 04 / 06</span>
             <span>DAILY CHECK-IN // SELF-LOG</span>
           </div>
           <div style="display: flex; gap: 0.75rem; align-items: center;">
@@ -907,7 +900,7 @@
         
         <div class="page-start-strip">
           <div class="page-start-label">
-            <span class="page-start-pill">PAGE 05 / 07</span>
+            <span class="page-start-pill">PAGE 05 / 06</span>
             <span>LOGBOOK // ARCHIVE</span>
           </div>
           <div style="color: var(--text-dim);">MISSION RECORD</div>
@@ -972,92 +965,20 @@
 
         <div class="page-end-strip">
           <button class="continue-btn" onclick="jumpToPage(5)">
-            CONTINUE TO 3D BODY (PAGE 06) ↓
+            CONTINUE TO PROTOCOLS (PAGE 06) ↓
           </button>
         </div>
 
       </div>
     </section>
 
-    <!-- PAGE 06: 3D BODY -->
-    <section class="snap-page-container" id="page-scanner">
-      <div class="page-stage">
-        
-        <div class="page-start-strip">
-          <div class="page-start-label">
-            <span class="page-start-pill">PAGE 06 / 07</span>
-            <span>3D BODY MAP // TOPOGRAPHY</span>
-          </div>
-          <div style="color: var(--text-dim);">CLICK AND DRAG TO ROTATE</div>
-        </div>
-
-        <div class="scanner-layout">
-          <div class="canvas-3d-box">
-            <canvas id="canvas3D"></canvas>
-            
-            <div style="position: absolute; top: 1rem; left: 1rem; font-family: var(--font-mono); font-size: 0.72rem; color: var(--cyan-neon); pointer-events: none;">
-              <div id="rot-angle-label" style="color: var(--text-muted);">ANGLE: 0°</div>
-            </div>
-
-            <div style="position: absolute; bottom: 1rem; left: 1rem; right: 1rem; display: flex; justify-content: space-between; z-index: 20;">
-              <button onclick="toggleAutoRotation()" id="autospin-btn" style="background: rgba(9, 18, 32, 0.85); border: 1px solid var(--border-subtle); color: var(--cyan-neon); padding: 0.35rem 0.85rem; border-radius: 6px; font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer;">
-                Auto-Spin: ON
-              </button>
-              <button onclick="reset3DOrientation()" style="background: rgba(9, 18, 32, 0.85); border: 1px solid var(--border-subtle); color: var(--text-muted); padding: 0.35rem 0.85rem; border-radius: 6px; font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer;">
-                Reset View
-              </button>
-            </div>
-          </div>
-
-          <div class="hud-box" style="height: 440px; display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
-                <h4 style="font-family: var(--font-mono); font-size: 0.88rem; font-weight: 700; color: #fff;">
-                  Body Area Check
-                </h4>
-                <span class="status-badge warn" id="hotspot-risk-pill">NORMAL</span>
-              </div>
-
-              <div style="margin-top: 1rem;">
-                <h3 id="hotspot-name" style="font-size: 1.15rem; font-weight: 700; color: var(--amber-warn);">
-                  Eyes (Fluid Pressure)
-                </h3>
-                <p id="hotspot-explanation" style="font-size: 0.84rem; color: var(--text-muted); margin: 0.75rem 0; line-height: 1.55;">
-                  Microgravity shifts fluids headward, increasing optic nerve pressure and altering vision.
-                </p>
-                <div style="background: rgba(7, 13, 23, 0.85); padding: 0.85rem; border-radius: 6px; border: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.76rem;">
-                  <span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span>
-                  Rx: 45-min Lower Body Negative Pressure (LBNP) session.
-                </div>
-              </div>
-            </div>
-
-            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-              <button onclick="inspectBodyPart('sans')" class="graph-tab active" id="btn-part-sans" style="font-size: 0.7rem; padding: 0.35rem 0.65rem;">Eyes</button>
-              <button onclick="inspectBodyPart('ijv')" class="graph-tab" id="btn-part-ijv" style="font-size: 0.7rem; padding: 0.35rem 0.65rem;">Neck</button>
-              <button onclick="inspectBodyPart('heart')" class="graph-tab" id="btn-part-heart" style="font-size: 0.7rem; padding: 0.35rem 0.65rem;">Heart</button>
-              <button onclick="inspectBodyPart('bone')" class="graph-tab" id="btn-part-bone" style="font-size: 0.7rem; padding: 0.35rem 0.65rem;">Bones</button>
-              <button onclick="inspectBodyPart('spine')" class="graph-tab" id="btn-part-spine" style="font-size: 0.7rem; padding: 0.35rem 0.65rem;">Spine</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="page-end-strip">
-          <button class="continue-btn" onclick="jumpToPage(6)">
-            CONTINUE TO PROTOCOLS (PAGE 07) ↓
-          </button>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- PAGE 07: PROTOCOLS -->
+    <!-- PAGE 06: PROTOCOLS -->
     <section class="snap-page-container" id="page-protocols">
       <div class="page-stage">
         
         <div class="page-start-strip">
           <div class="page-start-label">
-            <span class="page-start-pill">PAGE 07 / 07</span>
+            <span class="page-start-pill">PAGE 06 / 06</span>
             <span>TREATMENT PROTOCOLS // COUNTERMEASURES</span>
           </div>
           <div style="color: var(--text-dim);">SCHEDULED ACTIONS</div>
@@ -1252,8 +1173,7 @@
     /* NATIVE SCROLL NAVIGATION
        Scrolling itself is CSS scroll-snap (see styles). JS only:
        - tracks the active page for the nav pills + entrance animations
-       - maps arrow/PageUp/PageDown keys to page jumps
-       - starts/stops the 3D render loop when its page is off-screen */
+       - maps arrow/PageUp/PageDown keys to page jumps */
     function updateNavPills(index) {
       document.querySelectorAll('.nav-tab-btn').forEach((btn, i) => {
         const active = (i === index);
@@ -1313,7 +1233,6 @@
       setupPageObserver();
       setupKeyboardNav();
       initializeStorage();
-      setupDetailed3DModel();
     });
 
     function initializeStorage() {
@@ -1670,355 +1589,6 @@
       ctx.clearRect(0, 0, rect.width, rect.height); ctx.strokeStyle = "rgba(45, 75, 115, 0.3)";
       for (let x = 40; x < rect.width; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, rect.height); ctx.stroke(); }
       for (let y = 30; y < rect.height; y += 30) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(rect.width, y); ctx.stroke(); }
-    }
-
-    /* ------------------------------------------------------------------
-       HUMANOID WIREFRAME MESH (page 06)
-       A surface grid rather than a stick figure: head+torso+pelvis and
-       the feet are swept as elliptical cross-sections down a profile;
-       arms and legs are tubes swept along a path with an orthonormal
-       frame. Consecutive rings are stitched into quads, then drawn with
-       depth-graded alpha (bright front lines, faint back lines) so the
-       body reads as a volume — the classic cyan scan-wireframe look.
-       ------------------------------------------------------------------ */
-    const MESH_TORSO_PROFILE = [
-      /* [y, rx, rz, cz?] — anthropometric landmarks for a ~175 cm figure
-         scaled to a 298-unit height (crown -138 → feet +160) */
-      [ -138, 1.0,  1.0,  0],   /* crown */
-      [ -135, 6.5,  7.0,  0],
-      [ -131, 10.5, 12.5, 0],
-      [ -126, 12.8, 15.5, 0],   /* skull */
-      [ -120, 13.3, 16.5, 0],   /* widest part of head */
-      [ -114, 13.0, 16.3, 0],   /* eye line */
-      [ -108, 12.2, 15.6, 0],
-      [ -103, 10.8, 14.0, 0],   /* jaw */
-      [ -99, 8.6,  11.5, 0],    /* chin */
-      [ -96, 7.2,  9.5,  0],    /* throat */
-      [ -93, 9.5,  9.0,  0],    /* neck (≈11 cm wide) */
-      [ -87, 9.8,  9.2,  0],
-      [ -84, 11.5, 10.0, 0],    /* shoulder line (acromion ≈ y-84) */
-      [ -80, 17.0, 12.0, 0],    /* trapezius */
-      [ -76, 23.0, 14.5, 0],    /* shoulder girdle */
-      [ -71, 26.5, 16.5, 0.5],
-      [ -64, 28.0, 17.5, 0.5],  /* armpit level */
-      [ -56, 28.5, 17.8, 0.5],  /* chest (≈34 cm breadth) */
-      [ -48, 27.5, 17.2, 0.3],
-      [ -40, 25.5, 16.3, 0],
-      [ -32, 23.8, 15.6, 0],
-      [ -26, 23.0, 15.3, 0],    /* waist (≈27 cm breadth) */
-      [ -18, 23.0, 15.3, 0],
-      [ -10, 24.0, 16.0, -0.3],
-      [  -2, 25.5, 17.0, -0.8], /* hips */
-      [   4, 26.5, 18.0, -1.2],
-      [  10, 26.0, 18.0, -1.5]  /* pelvis ends here — legs take over (crotch ≈ y+8) */
-    ];
-    const MESH_FOOT_PROFILE = [
-      [146.5, 5.2, 5.5, -4], [151, 6.8, 9.5, 0], [155, 7.8, 12, 4],
-      [158, 7.6, 14, 9], [160.3, 6.0, 14, 13], [161.5, 3.2, 8, 16]
-    ]; /* [y, rx, rz, cz] — ankle down to toe, heel ≈ z-10 → toe ≈ z+27 */
-    const MESH_HAND_PROFILE = [
-      [13.5, 3.0, 5.5, 3], [18, 3.4, 7.0, 3], [26, 3.5, 7.6, 3.2],
-      [34, 3.3, 7.2, 3.4], [40, 2.9, 6.2, 3.4], [44, 2.0, 4.6, 3.4]
-    ]; /* [y, rx=thickness, rz=width, cz] — palm faces the body (medially) */
-    const MESH_ARM_PATH = [
-      [28, -74, 0], [31, -60, 0.5], [33, -44, 1], [33.5, -25, 1.5],
-      [33, -8, 2], [31.5, 5, 2.5], [30, 13, 3]
-    ]; /* shoulder joint ≈ x28 → wrist ≈ x30, hanging with slight abduction */
-    const MESH_ARM_R = [11, 8.6, 8.2, 7.2, 7.5, 6.5, 4.8];
-    const MESH_LEG_PATH = [
-      [15, 6, 0], [14, 30, 0.5], [12.5, 55, 0.5], [11, 78, 0.5],
-      [10.5, 96, -1], [10, 118, -0.5], [9.5, 140, 0], [9.5, 147, -0.5]
-    ]; /* hip joint ≈ y+8 → knee ≈ y+78 → ankle ≈ y+146 */
-    const MESH_LEG_R = [13.6, 12.8, 11.2, 9.2, 10.4, 7.8, 5.6, 5.2];
-
-    /* Facial relief: brow ridge, nose, lips and chin projected forward on
-       the front arc of the head rings (front = θ 90°). Window functions
-       are parabolic in both angle and height so the bumps stay smooth. */
-    function meshFaceMod(y, th) {
-      if (y > -94) return 0; /* head only */
-      const phi = Math.abs(th - Math.PI / 2);
-      const win = (half) => { const t = phi / half; return t < 1 ? (1 - t * t) * (1 - t * t) : 0; };
-      const band = (c, w) => { const t = (y - c) / w; return t > -1 && t < 1 ? (1 - t * t) * (1 - t * t) : 0; };
-      return band(-115.5, 3.2) * 1.6 * win(1.15)  /* brow ridge */
-           + band(-106, 4.6) * 4.6 * win(0.40)     /* nose */
-           + band(-100.5, 2.2) * 1.1 * win(0.45)   /* lips */
-           + band(-98, 2.4) * 1.4 * win(0.60);     /* chin */
-    }
-
-    function meshProfileAt(keys, y) {
-      let a = keys[0], b = keys[0];
-      if (y > keys[0][0] && y < keys[keys.length - 1][0]) {
-        for (let i = 0; i < keys.length - 1; i++) {
-          if (y >= keys[i][0] && y <= keys[i + 1][0]) { a = keys[i]; b = keys[i + 1]; break; }
-        }
-      } else if (y >= keys[keys.length - 1][0]) {
-        a = b = keys[keys.length - 1];
-      }
-      const span = (b[0] - a[0]) || 1;
-      const t = Math.min(1, Math.max(0, (y - a[0]) / span));
-      const e = t * t * (3 - 2 * t); /* smoothstep keeps curvature organic */
-      const czA = a[3] || 0, czB = b[3] || 0;
-      return [a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e, czA + (czB - czA) * e];
-    }
-
-    function meshProfileRings(keys, step, segs) {
-      const y0 = keys[0][0], y1 = keys[keys.length - 1][0];
-      const stepFn = typeof step === 'function' ? step : () => step;
-      const ys = [];
-      let y = y0;
-      while (y < y1 - 1e-9) { ys.push(y); y += stepFn(y); }
-      ys.push(y1);
-      const rings = [];
-      for (const yy of ys) {
-        const pr = meshProfileAt(keys, yy);
-        const ring = [];
-        for (let j = 0; j < segs; j++) {
-          const th = (j / segs) * Math.PI * 2;
-          ring.push([pr[0] * Math.cos(th), yy, pr[2] + pr[1] * Math.sin(th) + meshFaceMod(yy, th)]);
-        }
-        rings.push(ring);
-      }
-      return rings;
-    }
-
-    function meshTubeRings(path, radii, step, segs) {
-      const lens = []; let total = 0;
-      for (let i = 0; i < path.length - 1; i++) {
-        const a = path[i], b = path[i + 1];
-        const d = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
-        lens.push(d); total += d;
-      }
-      const n = Math.max(2, Math.round(total / step));
-      const rings = [];
-      for (let k = 0; k <= n; k++) {
-        let t = (k / n) * total, si = 0;
-        while (si < lens.length - 1 && t > lens[si]) { t -= lens[si]; si++; }
-        const a = path[si], b = path[si + 1];
-        const f = lens[si] > 0 ? t / lens[si] : 0;
-        const px = a[0] + (b[0] - a[0]) * f, py = a[1] + (b[1] - a[1]) * f, pz = a[2] + (b[2] - a[2]) * f;
-        const r = radii[si] + (radii[si + 1] - radii[si]) * f;
-        let tx = b[0] - a[0], ty = b[1] - a[1], tz = b[2] - a[2];
-        const tl = Math.hypot(tx, ty, tz) || 1; tx /= tl; ty /= tl; tz /= tl;
-        /* frame from a fixed +Z reference: n1 = t×z, n2 = t×n1 (stable for
-           vertical-ish limbs — no degenerate cases along arms/legs) */
-        let n1x = ty, n1y = -tx, n1z = 0;
-        const n1l = Math.hypot(n1x, n1y, n1z) || 1; n1x /= n1l; n1y /= n1l; n1z /= n1l;
-        const n2x = ty * n1z - tz * n1y, n2y = tz * n1x - tx * n1z, n2z = tx * n1y - ty * n1x;
-        const ring = [];
-        for (let j = 0; j < segs; j++) {
-          const th = (j / segs) * Math.PI * 2;
-          const c = Math.cos(th) * r, s = Math.sin(th) * r;
-          ring.push([px + n1x * c + n2x * s, py + n1y * c + n2y * s, pz + n1z * c + n2z * s]);
-        }
-        rings.push(ring);
-      }
-      return rings;
-    }
-
-    function meshMirrorX(rings) {
-      return rings.map((ring) => ring.map((p) => [-p[0], p[1], p[2]]));
-    }
-
-    function buildHumanoidMesh() {
-      const groups = [];
-      /* denser rings over the head/face, standard density down the body */
-      groups.push(meshProfileRings(MESH_TORSO_PROFILE, (y) => (y < -84 ? 2.6 : 3.4), 32));
-      const arm = meshTubeRings(MESH_ARM_PATH, MESH_ARM_R, 4.5, 14);
-      groups.push(arm, meshMirrorX(arm));
-      const hand = meshProfileRings(MESH_HAND_PROFILE, 3.0, 10)
-        .map((ring) => ring.map((p) => [p[0] + 29.5, p[1], p[2]]));
-      groups.push(hand, meshMirrorX(hand));
-      const leg = meshTubeRings(MESH_LEG_PATH, MESH_LEG_R, 4.6, 16);
-      groups.push(leg, meshMirrorX(leg));
-      const foot = meshProfileRings(MESH_FOOT_PROFILE, 2.6, 12)
-        .map((ring) => ring.map((p) => [p[0] + 9.5, p[1], p[2]]));
-      groups.push(foot, meshMirrorX(foot));
-
-      const pts = []; const segs = [];
-      for (const rings of groups) {
-        const ringStarts = [];
-        for (const ring of rings) {
-          const start = pts.length / 3;
-          ringStarts.push(start);
-          for (const p of ring) pts.push(p[0], p[1], p[2]);
-          for (let j = 0; j < ring.length; j++) segs.push(start + j, start + ((j + 1) % ring.length));
-        }
-        for (let r = 0; r < rings.length - 1; r++) {
-          for (let j = 0; j < rings[r].length; j++) segs.push(ringStarts[r] + j, ringStarts[r + 1] + j);
-        }
-      }
-      return { points: new Float32Array(pts), segs: new Uint32Array(segs) };
-    }
-
-    let model3d = { canvas: null, ctx: null, rotX: 0.1, rotY: 0.3, velX: 0, velY: 0, isDragging: false, lastX: 0, lastY: 0, autoSpin: true, selectedTarget: 'sans', mesh: null, _proj: null, _buckets: null, hotspots: [], visible: false, lastLabelTs: 0 };
-
-    function setupDetailed3DModel() {
-      model3d.canvas = $('canvas3D'); if (!model3d.canvas) return; model3d.ctx = model3d.canvas.getContext('2d');
-      model3d.mesh = buildHumanoidMesh();
-      model3d._buckets = Array.from({ length: 8 }, () => []);
-
-      model3d.hotspots = [{ id: 'sans', name: "Eyes", x: 0, y: -115, z: 18 },{ id: 'ijv', name: "Neck", x: 7.5, y: -90, z: 7.5 },{ id: 'heart', name: "Heart", x: 7, y: -52, z: 17 },{ id: 'spine', name: "Spine", x: 0, y: -18, z: -15.8 },{ id: 'bone', name: "Bones", x: -11, y: 78, z: 9.5 }];
-
-      model3d.canvas.addEventListener('mousedown', (e) => { e.stopPropagation(); model3d.isDragging = true; model3d.autoSpin = false; setText('autospin-btn', "Auto-Spin: OFF"); model3d.lastX = e.clientX; model3d.lastY = e.clientY; model3d.velX = 0; model3d.velY = 0; });
-      window.addEventListener('mousemove', (e) => { if (!model3d.isDragging) return; const dx = e.clientX - model3d.lastX; const dy = e.clientY - model3d.lastY; model3d.velY = dx * 0.007; model3d.velX = dy * 0.007; model3d.rotY += model3d.velY; model3d.rotX = Math.max(-0.6, Math.min(0.6, model3d.rotX + model3d.velX)); model3d.lastX = e.clientX; model3d.lastY = e.clientY; });
-      window.addEventListener('mouseup', () => { model3d.isDragging = false; });
-      model3d.canvas.addEventListener('touchstart', (e) => { e.stopPropagation(); if (e.touches.length === 1) { model3d.isDragging = true; model3d.autoSpin = false; model3d.lastX = e.touches[0].clientX; model3d.lastY = e.touches[0].clientY; model3d.velX = 0; model3d.velY = 0; } }, { passive: true });
-      window.addEventListener('touchmove', (e) => { if (!model3d.isDragging || e.touches.length === 0) return; const dx = e.touches[0].clientX - model3d.lastX; const dy = e.touches[0].clientY - model3d.lastY; model3d.velY = dx * 0.009; model3d.velX = dy * 0.009; model3d.rotY += model3d.velY; model3d.rotX = Math.max(-0.6, Math.min(0.6, model3d.rotX + model3d.velX)); model3d.lastX = e.touches[0].clientX; model3d.lastY = e.touches[0].clientY; }, { passive: true });
-      window.addEventListener('touchend', () => { model3d.isDragging = false; });
-
-      /* Only burn frames rendering the 3D body while its page is on screen */
-      new IntersectionObserver((entries) => {
-        entries.forEach((en) => { model3d.visible = en.isIntersecting && en.intersectionRatio >= 0.4; });
-      }, { root: $('snapContainer'), threshold: [0, 0.4] }).observe($('page-scanner'));
-
-      requestAnimationFrame(run3DLoop);
-    }
-
-    function hasActiveBodyIssue(hotspotId) {
-      if (!bioStore || !bioStore.days || !bioStore.days[selectedDay]) return false;
-      const d = bioStore.days[selectedDay];
-      if (hotspotId === 'sans') return (d.onsd > 5.8) || (d.vision && d.vision !== 'clear') || (d.head_fullness && d.head_fullness >= 6);
-      if (hotspotId === 'ijv') return (d.ijv_csa > 68.0);
-      if (hotspotId === 'heart') return (d.resting_hr > 75) || (d.hrv_rmssd < 45) || (d.status === 'hazard');
-      if (hotspotId === 'bone') return (d.ntx_resorption > 65.0);
-      if (hotspotId === 'spine') return (d.fatigue && d.fatigue >= 8);
-      return false;
-    }
-
-    function run3DLoop() {
-      requestAnimationFrame(run3DLoop);
-      const canvas = model3d.canvas; if (!canvas || !model3d.visible) return; /* skip work while page 06 is off-screen */
-      const ctx = model3d.ctx;
-      const rect = canvas.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1;
-      if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) { canvas.width = rect.width * dpr; canvas.height = rect.height * dpr; }
-      ctx.save(); ctx.scale(dpr, dpr);
-
-      const W = rect.width; const H = rect.height; ctx.clearRect(0, 0, W, H);
-
-      if (model3d.autoSpin) { model3d.rotY += 0.006; }
-      else if (!model3d.isDragging) { model3d.rotY += model3d.velY; model3d.rotX = Math.max(-0.6, Math.min(0.6, model3d.rotX + model3d.velX)); model3d.velY *= 0.92; model3d.velX *= 0.92; }
-
-      /* throttle the DOM label write — no need to touch the DOM every frame */
-      const nowTs = performance.now();
-      if (nowTs - model3d.lastLabelTs > 120) {
-        const degY = Math.round(((model3d.rotY * 180 / Math.PI) % 360 + 360) % 360);
-        setText('rot-angle-label', `ANGLE: ${degY}°`);
-        model3d.lastLabelTs = nowTs;
-      }
-
-      const cx = W / 2; const cy = H / 2 + 10; const fov = 340;
-      const cosY = Math.cos(model3d.rotY), sinY = Math.sin(model3d.rotY);
-      const cosX = Math.cos(model3d.rotX), sinX = Math.sin(model3d.rotX);
-      function project(n) {
-        const x1 = n.x * cosY + n.z * sinY; const z1 = -n.x * sinY + n.z * cosY;
-        const y1 = n.y * cosX + z1 * sinX; const z2 = -n.y * sinX + z1 * cosX;
-        const scale = fov / (fov - z2); return { x: cx + x1 * scale, y: cy + y1 * scale, z: z2, scale: scale };
-      }
-
-      /* Humanoid mesh: project every vertex into one reusable Float32Array
-         (no per-frame allocations), then stroke quads grouped into 8 depth
-         buckets so each alpha costs a single path stroke. */
-      const mesh = model3d.mesh; const buckets = model3d._buckets;
-      if (mesh && buckets) {
-        const nPts = mesh.points.length / 3;
-        let proj = model3d._proj;
-        if (!proj || proj.length !== mesh.points.length) {
-          proj = model3d._proj = new Float32Array(mesh.points.length);
-        }
-        let zLo = Infinity, zHi = -Infinity;
-        for (let i = 0; i < nPts; i++) {
-          const o = i * 3;
-          const nx = mesh.points[o], ny = mesh.points[o + 1], nz = mesh.points[o + 2];
-          const x1 = nx * cosY + nz * sinY; const z1 = -nx * sinY + nz * cosY;
-          const y1 = ny * cosX + z1 * sinX; const z2 = -ny * sinX + z1 * cosX;
-          const sc = fov / (fov - z2);
-          proj[o] = cx + x1 * sc; proj[o + 1] = cy + y1 * sc; proj[o + 2] = z2;
-          if (z2 < zLo) zLo = z2;
-          if (z2 > zHi) zHi = z2;
-        }
-        const zSpan = (zHi - zLo) || 1;
-        for (let b = 0; b < buckets.length; b++) buckets[b].length = 0;
-        const segs = mesh.segs;
-        for (let s = 0; s < segs.length; s += 2) {
-          const ia = segs[s] * 3, ib = segs[s + 1] * 3;
-          let bi = (((proj[ia + 2] + proj[ib + 2]) * 0.5 - zLo) / zSpan * buckets.length) | 0;
-          if (bi < 0) bi = 0; else if (bi >= buckets.length) bi = buckets.length - 1;
-          buckets[bi].push(proj[ia], proj[ia + 1], proj[ib], proj[ib + 1]);
-        }
-        for (let b = 0; b < buckets.length; b++) {
-          const arr = buckets[b]; if (!arr.length) continue;
-          const depth = b / (buckets.length - 1);
-          ctx.strokeStyle = `rgba(64, 232, 255, ${(0.16 + depth * 0.72).toFixed(3)})`;
-          ctx.lineWidth = 1 + depth * 0.35;
-          ctx.beginPath();
-          for (let i = 0; i < arr.length; i += 4) {
-            ctx.moveTo(arr[i], arr[i + 1]);
-            ctx.lineTo(arr[i + 2], arr[i + 3]);
-          }
-          ctx.stroke();
-        }
-      }
-
-      const heartProj = project({ x: 4, y: -38, z: 6 });
-      ctx.save(); ctx.fillStyle = "rgba(0, 240, 255, 0.35)"; ctx.beginPath(); ctx.arc(heartProj.x, heartProj.y, Math.max(2, 4.5 * heartProj.scale), 0, Math.PI * 2); ctx.fill(); ctx.restore();
-
-      const time = Date.now() * 0.003;
-      model3d.hotspots.forEach(hs => {
-        const p = project(hs); const isSelected = (hs.id === model3d.selectedTarget); const hasIssue = hasActiveBodyIssue(hs.id);
-        ctx.save();
-        if (hasIssue) {
-          const pulse = Math.sin(time * 3.5) * 3;
-          const color = (bioStore && bioStore.days[selectedDay] && bioStore.days[selectedDay].status === 'hazard') ? '#ef4444' : '#f59e0b';
-          ctx.strokeStyle = color; ctx.lineWidth = isSelected ? 2.5 : 1.8;
-          ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(3, (isSelected ? 13 : 9) * p.scale + pulse), 0, Math.PI * 2); ctx.stroke();
-          ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(2, (isSelected ? 4.5 : 3) * p.scale), 0, Math.PI * 2); ctx.fill();
-        } else {
-          const color = isSelected ? 'rgba(0, 240, 255, 0.9)' : 'rgba(0, 240, 255, 0.35)';
-          ctx.strokeStyle = color; ctx.lineWidth = isSelected ? 2.0 : 1.2;
-          ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(2, (isSelected ? 10 : 6) * p.scale), 0, Math.PI * 2); ctx.stroke();
-          ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1.5, (isSelected ? 3.5 : 2) * p.scale), 0, Math.PI * 2); ctx.fill();
-        }
-        if (isSelected) {
-          ctx.font = "bold 10px ui-monospace, monospace"; ctx.fillStyle = hasIssue ? '#f59e0b' : '#00f0ff';
-          ctx.fillText(`▲ ${hs.name}`, p.x + 14, p.y + 3);
-        }
-        ctx.restore();
-      });
-
-      ctx.restore();
-    }
-
-    function toggleAutoRotation() { model3d.autoSpin = !model3d.autoSpin; setText('autospin-btn', `Auto-Spin: ${model3d.autoSpin ? 'ON' : 'OFF'}`); }
-    function reset3DOrientation() { model3d.rotX = 0.1; model3d.rotY = 0.3; model3d.velX = 0; model3d.velY = 0; model3d.autoSpin = true; setText('autospin-btn', "Auto-Spin: ON"); }
-
-    function inspectBodyPart(targetId) {
-      model3d.selectedTarget = targetId; document.querySelectorAll('.scanner-layout .graph-tab').forEach(b => b.classList.remove('active'));
-      const activeBtn = $(`btn-part-${targetId}`); if (activeBtn) activeBtn.classList.add('active');
-      const pill = $('hotspot-risk-pill'); const hasIssue = hasActiveBodyIssue(targetId);
-      if (pill) { pill.className = hasIssue ? "status-badge warn" : "status-badge ok"; pill.innerText = hasIssue ? "WARNING" : "NORMAL"; }
-
-      const nameEl = $('hotspot-name');
-      if (targetId === 'sans') {
-        setText('hotspot-name', "Eyes (Fluid Pressure)"); if (nameEl) nameEl.style.color = hasIssue ? "var(--amber-warn)" : "var(--cyan-neon)";
-        setText('hotspot-explanation', "Microgravity shifts fluids headward, increasing optic nerve pressure and altering vision.");
-        document.querySelector('#hotspot-explanation + div').innerHTML = '<span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span> Rx: 45-min Lower Body Negative Pressure (LBNP).';
-      } else if (targetId === 'ijv') {
-        setText('hotspot-name', "Neck Vein Swelling"); if (nameEl) nameEl.style.color = hasIssue ? "var(--red-alert)" : "var(--cyan-neon)";
-        setText('hotspot-explanation', "Fluids pooling in the upper body cause neck vein distension and stagnant blood flow.");
-        document.querySelector('#hotspot-explanation + div').innerHTML = '<span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span> Use LBNP device and Braslet thigh cuffs.';
-      } else if (targetId === 'heart') {
-        setText('hotspot-name', "Heart Muscle Tone"); if (nameEl) nameEl.style.color = hasIssue ? "var(--red-alert)" : "var(--cyan-neon)";
-        setText('hotspot-explanation', "Heart muscle atrophies in zero-G due to reduced workload. Requires daily ARED/CEVIS exercise.");
-        document.querySelector('#hotspot-explanation + div').innerHTML = '<span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span> ~2 hours combined cardio and resistive workout.';
-      } else if (targetId === 'bone') {
-        setText('hotspot-name', "Bone Thinning"); if (nameEl) nameEl.style.color = hasIssue ? "var(--amber-warn)" : "var(--cyan-neon)";
-        setText('hotspot-explanation', "Weight-bearing bones lose 1–1.5% of their density per month without gravity. ARED heavy lifting stimulates bone growth.");
-        document.querySelector('#hotspot-explanation + div').innerHTML = '<span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span> Heavy squat and deadlift protocols.';
-      } else if (targetId === 'spine') {
-        setText('hotspot-name', "Spine Lengthening"); if (nameEl) nameEl.style.color = hasIssue ? "var(--amber-warn)" : "var(--cyan-neon)";
-        setText('hotspot-explanation', "Spinal discs expand in zero-G, lengthening the spine by up to 5cm and causing back pain.");
-        document.querySelector('#hotspot-explanation + div').innerHTML = '<span style="color: var(--cyan-neon); display: block; margin-bottom: 0.25rem;">TREATMENT:</span> Fetal tuck stretches and core strengthening.';
-      }
     }
 
     /* ----------------------------------------------------------------------
